@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SIMS.Models;
+using System.Diagnostics;
 
 namespace SIMS.Controllers
 {
