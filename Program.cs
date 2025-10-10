@@ -1,7 +1,13 @@
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// ??ng ký repository vào Dependency Injection container
+//builder.Services.AddScoped<IStudentRepository, InMemoryStudentRepository>();
+
 
 var app = builder.Build();
 

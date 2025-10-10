@@ -1,0 +1,52 @@
+﻿@* @model IEnumerable<SIMS.Models.Student>
+@{
+    var searchString = Context.Request.Query["searchString"].ToString();
+}
+
+<h2>Student List</h2>
+<form>
+    <input type="text" name="searchString" placeholder="Search by name" value="@searchString" />
+    <button type="submit">Search</button>
+</form>
+<ul>
+    @foreach (var s in Model)
+    {
+        <li>
+            <a asp-controller="Student" asp-action="Details" asp-route-id="@s.Id">
+                @s.Name (@s.Age)
+            </a>
+        </li>
+    }
+</ul> *@
+
+<div class="text-center">
+    <h1 class="display-4">Student</h1>
+</div>
+
+<h2>Students List</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name - </th>
+            <th>Email - </th>
+            <th>Phone - </th>
+            <th>Date Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        @* <tr>
+            <td>hello</td>
+        </tr>
+        @foreach (var s in Model)
+        {
+            <tr>
+
+                <td>@s.FullName</td>
+                <td>@s.Email</td>
+                <td>@s.PhoneNumber</td>
+                <td>@s.Created.ToShortDateString()</td>
+            </tr>
+        } *@
+    </tbody>
+</table>
