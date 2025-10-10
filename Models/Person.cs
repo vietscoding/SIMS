@@ -14,12 +14,11 @@
 
         public DateTime? DateOfBirth { get; set; }
 
-        public string? ethnicity { get; set; } // dân tộc, vd: H'Mông, Ê-đê, Kinh,...
+        public string? Ethnicity { get; set; } // dân tộc, vd: H'Mông, Ê-đê, Kinh,...
 
-        public string PhoneNumber { get; set; } = string.Empty; // sđt của sinh viên
+        public string PhoneNumber { get; set; } = string.Empty; 
 
         public DateTime Created { get; set; }
-
 
         public DateTime Updated { get; set; }
 
