@@ -2,7 +2,7 @@
 {
     public class Person
     {
-        public string personId { get; set; } = string.Empty;
+        public string PersonId { get; set; } = string.Empty;
 
         public string FullName { get; set; } = "This is a name";
 
@@ -14,15 +14,20 @@
 
         public DateTime? DateOfBirth { get; set; }
 
-        public string? Ethnicity { get; set; } // dân tộc, vd: H'Mông, Ê-đê, Kinh,...
-
         public string PhoneNumber { get; set; } = string.Empty; 
+
+        public string Address { get; set; } = string.Empty;
 
         public DateTime Created { get; set; }
 
         public DateTime Updated { get; set; }
 
-        private string? Password { get; set; }
+        public Person() { }
+
+
 
     }
+
+    
+
 }

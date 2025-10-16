@@ -21,6 +21,10 @@ namespace SIMS.Controllers
             {
                 return RedirectToAction("Index", "Registrar");
             }
+            else
+            {
+                return RedirectToAction("Index", "Admin");
+            }
 
             ViewBag.Error = "Invalid username or password";
             return View();
