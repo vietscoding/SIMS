@@ -23,14 +23,14 @@ namespace SIMS.Controllers
 
         public IActionResult StudentList()
         {
-
-            return View();
+            var students = _db.GetAllStudents();
+            return View("StudentList",students);
         }
 
         public IActionResult PeopleList() 
         { 
             var people = _db.GetAllPeople();
-            return View("PeopleList",people); 
+            return View("PeopleList", people);
         }
     }
 }

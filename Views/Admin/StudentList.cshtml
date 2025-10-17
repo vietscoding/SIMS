@@ -1,0 +1,120 @@
+﻿@model List<SIMS.Models.Student>
+
+@{
+    Layout = "_AdminLayout";
+}
+
+<h2>Students List</h2>
+<div class="actionBtnBox">
+    <button class="btn btn-primary" onclick="" style="margin-bottom: 10px;">Search</button>
+    <button class="btn btn-success" onclick="" style="margin-bottom: 10px;">Add</button>
+    <button class="btn btn-warning" onclick="" style="margin-bottom: 10px;">Edit</button>
+    <button class="btn btn-danger" onclick="" style="margin-bottom: 10px;">Delete</button>
+</div>
+
+<div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Person ID</th>
+                <th>Full Name</th>
+                <th>Citizen ID</th>
+                <th>Gender</th>
+                <th>Date of Birth</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Address</th>
+                <th>Nationality</th>
+                <th>Student ID</th>
+                <th>Student Code</th>
+                <th>Program ID</th>
+                <th>Enrollment Date</th>
+                <th>Current Semester</th>
+                <th>Status ID</th>
+                <th>GPA</th>
+                <th>Credits Earned</th>
+                <th>Expected Graduate Date</th>
+                <th>Relatives' Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.PersonId</td>
+                    <td>@s.FullName</td>
+                    <td>@s.CitizenIdNumber</td>
+                    <td>@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")</td>
+                    <td>@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    <td>@s.Email</td>
+                    <td>@s.PhoneNumber</td>
+                    <td>@s.Address</td>
+                    <td>@s.Nationality</td>
+                    <td>@s.StudentId</td>
+                    <td>@s.StudentCode</td>
+                    <td>@s.ProgramId</td>
+                    <td>@s.EnrollmentDate.ToString("yyyy-MM-dd")</td>
+                    <td>@s.CurrentSemester</td>
+                    <td>@s.StudentStatusId</td>
+                    <td>@s.GPA</td>
+                    <td>@s.CreditsEarned</td>
+                    <td>@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")</td>
+                    <td>@s.PhoneNumberOfRelatives</td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* @model List<SIMS.Models.Student>
+
+@{
+    Layout = "_AdminLayout";
+}
+
+<h2>Students List</h2>
+
+<div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+    <table class="table table-striped table-bordered" style="min-width: 1200px; table-layout: fixed; width: 100%;">
+        <thead class="table-light">
+            <tr>
+                @foreach (var header in new[] {
+                    "Person ID","Full Name","Citizen ID","Gender","Date of Birth","Email","Phone",
+                    "Address","Nationality","Student ID","Student Code","Program ID","Enrollment Date",
+                    "Semester","Status ID","GPA","Credits","Expected Grad","Relatives' Phone"
+                })
+                {
+                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td title="@s.PersonId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PersonId</td>
+                    <td title="@s.FullName" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.FullName</td>
+                    <td title="@s.CitizenIdNumber" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CitizenIdNumber</td>
+                    <td title="@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")</td>
+                    <td title="@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    <td title="@s.Email" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Email</td>
+                    <td title="@s.PhoneNumber" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PhoneNumber</td>
+                    <td title="@s.Address" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Address</td>
+                    <td title="@s.Nationality" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Nationality</td>
+                    <td title="@s.StudentId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentId</td>
+                    <td title="@s.StudentCode" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentCode</td>
+                    <td title="@s.ProgramId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.ProgramId</td>
+                    <td title="@s.EnrollmentDate.ToString("yyyy-MM-dd")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.EnrollmentDate.ToString("yyyy-MM-dd")</td>
+                    <td title="@s.CurrentSemester" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CurrentSemester</td>
+                    <td title="@s.StudentStatusId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentStatusId</td>
+                    <td title="@s.GPA" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.GPA</td>
+                    <td title="@s.CreditsEarned" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CreditsEarned</td>
+                    <td title="@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")</td>
+                    <td title="@s.PhoneNumberOfRelatives" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PhoneNumberOfRelatives</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div> *@

@@ -37,8 +37,7 @@ namespace SIMS.Controllers
 
         public IActionResult Details()
         {
-            Student student = new("Id1", "student1",DateTime.Now);
-            return View(student);
+            return View();
         }
 
     }

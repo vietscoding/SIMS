@@ -4,19 +4,21 @@
     {
         public string PersonId { get; set; } = string.Empty;
 
-        public string FullName { get; set; } = "This is a name";
-
-        public string Email { get; set; } = string.Empty;
-
         public string CitizenIdNumber { get; set; } = string.Empty;
+
+        public string FullName { get; set; } = "This is a name";
 
         public bool? Gender { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
 
-        public string PhoneNumber { get; set; } = string.Empty; 
+        public string Email { get; set; } = string.Empty;
+
+        public string PhoneNumber { get; set; } = string.Empty;
 
         public string Address { get; set; } = string.Empty;
+
+        public string Nationality { get; set; }
 
         public DateTime Created { get; set; }
 
