@@ -1,7 +1,14 @@
-﻿@model List<SIMS.Models.Student>
+﻿@model SIMS.ViewModels.StudentDetailsViewModel
+
+
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
 
 @{
     Layout = "_AdminLayout";
+
 }
 
 <h2>Students List</h2>
@@ -31,6 +38,7 @@
                 <th>Student ID</th>
                 <th>Student Code</th>
                 <th>Program ID</th>
+                <th>Program name</th>
                 <th>Enrollment Date</th>
                 <th>Current Semester</th>
                 <th>Status ID</th>
@@ -41,7 +49,11 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var s in Model)
+            @{
+                var programs = Model.Programs;
+
+            }
+            @foreach (var s in Model.Students)
             {
                 <tr>
                     <td>
@@ -52,7 +64,7 @@
                         <a href="#" class="view-details" data-id="@s.StudentId">
                             @s.FullName
                         </a>
-                    </td>    
+                    </td>
                     <td>@s.CitizenIdNumber</td>
                     <td>@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")</td>
                     <td>@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
@@ -63,6 +75,7 @@
                     <td>@s.StudentId</td>
                     <td>@s.StudentCode</td>
                     <td>@s.ProgramId</td>
+                    <td>@s.</td>
                     <td>@s.EnrollmentDate.ToString("yyyy-MM-dd")</td>
                     <td>@s.CurrentSemester</td>
                     <td>@s.StudentStatusId</td>
@@ -70,7 +83,7 @@
                     <td>@s.CreditsEarned</td>
                     <td>@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")</td>
                     <td>@s.PhoneNumberOfRelatives</td>
-                    
+
 
                 </tr>
             }
@@ -121,54 +134,3 @@
     </script>
 }
 
-
-@* @model List<SIMS.Models.Student>
-
-@{
-    Layout = "_AdminLayout";
-}
-
-<h2>Students List</h2>
-
-<div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
-    <table class="table table-striped table-bordered" style="min-width: 1200px; table-layout: fixed; width: 100%;">
-        <thead class="table-light">
-            <tr>
-                @foreach (var header in new[] {
-                    "Person ID","Full Name","Citizen ID","Gender","Date of Birth","Email","Phone",
-                    "Address","Nationality","Student ID","Student Code","Program ID","Enrollment Date",
-                    "Semester","Status ID","GPA","Credits","Expected Grad","Relatives' Phone"
-                })
-                {
-                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@header</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var s in Model)
-            {
-                <tr>
-                    <td title="@s.PersonId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PersonId</td>
-                    <td title="@s.FullName" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.FullName</td>
-                    <td title="@s.CitizenIdNumber" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CitizenIdNumber</td>
-                    <td title="@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")</td>
-                    <td title="@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
-                    <td title="@s.Email" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Email</td>
-                    <td title="@s.PhoneNumber" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PhoneNumber</td>
-                    <td title="@s.Address" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Address</td>
-                    <td title="@s.Nationality" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.Nationality</td>
-                    <td title="@s.StudentId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentId</td>
-                    <td title="@s.StudentCode" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentCode</td>
-                    <td title="@s.ProgramId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.ProgramId</td>
-                    <td title="@s.EnrollmentDate.ToString("yyyy-MM-dd")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.EnrollmentDate.ToString("yyyy-MM-dd")</td>
-                    <td title="@s.CurrentSemester" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CurrentSemester</td>
-                    <td title="@s.StudentStatusId" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.StudentStatusId</td>
-                    <td title="@s.GPA" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.GPA</td>
-                    <td title="@s.CreditsEarned" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.CreditsEarned</td>
-                    <td title="@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")</td>
-                    <td title="@s.PhoneNumberOfRelatives" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@s.PhoneNumberOfRelatives</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div> *@

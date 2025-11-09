@@ -2,7 +2,11 @@
 {
     public class Student : Person
     {
-        public string StudentId { get; set; } = string.Empty;
+        // get program
+
+        // getProgramById()
+
+        public int StudentId { get; set; } = 0;
         //public string StudentCode { get; set; } = string.Empty;
         private string _studentCode;
 
@@ -18,7 +22,9 @@
             }
         }
 
-        public string ProgramId { get; set; } = string.Empty; // năm học
+        
+
+        public int ProgramId { get; set; } = 0;
         public DateTime EnrollmentDate { get; set; } // ngày nhập học
         public int CurrentSemester { get; set; } // học kỳ hiện tại
         public int StudentStatusId { get; set; } // trạng thái sinh viên (đang học, nghỉ học, tốt nghiệp, v.v.)
@@ -38,9 +44,6 @@
 
 
         public Student() { }
-
-        public IEnumerable<Student> Students { get; private set; }
-
 
     }
 }

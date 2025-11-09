@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIMS.Data;
+using SIMS.ViewModels;
+using SIMS.Models;
 
 namespace SIMS.Controllers
 {
@@ -27,10 +29,28 @@ namespace SIMS.Controllers
             return View("StudentList",students);
         }
 
+        public IActionResult StudentList2()
+        {
+            var studentDetailsList = new StudentDetailsViewModel
+            {
+                Students = _db.GetAllStudents(),
+                Programs = _db.GetAllAcademicPrograms()
+            };
+            return View("StudentList2", studentDetailsList);
+        }
+
         public IActionResult PeopleList() 
-        { 
+        {
+
             var people = _db.GetAllPeople();
             return View("PeopleList", people);
+        }
+
+
+
+        public IActionResult AcademicProgram()
+        {
+            return View();
         }
     }
 }
