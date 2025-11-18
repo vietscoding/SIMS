@@ -1,64 +1,94 @@
 ﻿
 
+@{
+    Layout = null;
+}
+@* File: _AdminLayout.cshtml *@
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SIMS</title>
+    <title>Admin - @ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SIMS.styles.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ADMIN</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <!--Mỗi area hoạt động như một “mini MVC” bên trong app.-->
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="StudentList">Student List</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="PeopleList">People List</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Details">Student Details</a>
-                        </li
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Details">Academic Program</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Privacy">Add Student</a>
-                        </li>
-                    </ul>
-                </div>
+<body class="admin-layout">
+    <aside class="sidebar" id="leftSidebar" aria-label="Main navigation">
+        <div class="sidebar-header">
+            <button id="sidebarToggle" class="sidebar-toggle" aria-expanded="true" aria-controls="leftSidebar">☰</button>
+            <span class="brand">Admin</span>
+        </div>
+
+
+        <!-- User Info Container -->
+        <div class="user-info" id="userInfo">
+            <img src="https://placehold.co/1024x1024?text=User" alt="User Avatar" class="user-avatar" />
+            <div class="user-details">
+                <div class="user-name">John Doe</div>
+                <div class="user-title">Admin</div>
             </div>
+        </div>
+
+        <!-- User Modal -->
+        <div id="userModal" class="user-modal">
+            <div class="user-modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>User Details</h2>
+                <p><strong>Name:</strong> John Doe</p>
+                <p><strong>Title:</strong> Administrator</p>
+                <p><strong>Email:</strong> john@example.com</p>
+                <p><strong>Joined:</strong> 2023-08-14</p>
+                <!-- Thêm các thông tin khác nếu cần -->
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a asp-controller="Admin" asp-action="Index" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <img src="~/icons/dashboard_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Dashboard</span>
+            </a>
+            <a asp-controller="Admin" asp-action="StudentList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "StudentList" ? "active" : "")">
+                <img src="~/icons/school_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Students</span>
+            </a>
+            <a asp-controller="Admin" asp-action="PeopleList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "PeopleList" ? "active" : "")">
+                <img src="~/icons/person_book_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">People</span>
+            </a>
+            <a asp-controller="Admin" asp-action="AcademicProgram" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram" ? "active" : "")">
+                <img src="~/icons/clinical_notes_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Programs</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Course" ? "active" : "")">
+                <img src="~/icons/folder_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Courses</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Classrooms" ? "active" : "")">
+                <img src="~/icons/co_present_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Classrooms</span>
+            </a>
+            <!-- Add more items here -->
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    </aside>
+
+    <div class="content" id="mainContent">
+        <header class="topbar">
+            <h1>@ViewData["Title"]</h1>
+        </header>
+        <main role="main" class="main-body">
             @RenderBody()
         </main>
+
+        <footer class="site-footer">
+            <small>&copy; @DateTime.Now.Year</small>
+        </footer>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - SIMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/sidebar.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using SIMS.Data;
 using SIMS.Models;
-using SIMS.Services;
 
 namespace SIMS.Controllers
 {
@@ -10,9 +8,9 @@ namespace SIMS.Controllers
     {
         private readonly DatabaseHelper _dbHelper;
 
-        public StudentController(IConfiguration configuration)
+        public StudentController(DatabaseHelper dbHelper)
         {
-            _dbHelper = new DatabaseHelper(configuration);
+            _dbHelper = dbHelper;
         }
 
         public IActionResult Index()
@@ -34,7 +32,7 @@ namespace SIMS.Controllers
         public IActionResult GetStudentById(int id)
         {
             var student = _dbHelper.GetStudentById(id);
-            if (student == null)
+            if (student == null || student.StudentId == 0)
                 return NotFound();
             return Json(student);
         }

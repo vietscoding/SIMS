@@ -1,6 +1,180 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<SIMS.Models.AcademicProgram>
+
 @{
     Layout = "_AdminLayout";
+}
+
+<h2>Academic Programs List</h2>
+<div class="actionBtnBox">
+    <form></form>
+    <button id="searchBtn" class="btn btn-primary" style="margin-bottom: 1vh;">Search</button>
+    <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh;">Filter</button>
+    <button id="addBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add</button>
+    <button id="editBtn" class="btn btn-warning" style="margin-bottom: 1vh;">Edit</button>
+    <button id="deleteBtn" class="btn btn-danger" style="margin-bottom: 1vh;">Delete</button>
+</div>
+
+<div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Program ID</th>
+                <th>Program Name</th>
+                <th>Major ID</th>
+                <th>Faculty ID</th>
+                <th>Language</th>
+                <th>Description</th>
+                <th>Number of Semesters</th>
+                <th>Total Required Credits</th>
+                <th>Obligated Credits</th>
+                <th>Elective Credits</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Is Deleted</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>
+                        <button class="btn btn-info btn-sm view-details" data-id="@p.AcademicProgramId">View</button>
+                    </td>
+                    <td>@p.AcademicProgramId</td>
+                    <td>
+                        <a href="#" class="view-details" data-id="@p.AcademicProgramId">
+                            @(p.AcademicProgramName ?? "N/A")
+
+                        </a>
+                    </td>
+                    <td>@(p.MajorId.HasValue ? p.MajorId.Value.ToString() : "N/A")</td>
+                    <td>@(p.FacultyId.HasValue ? p.FacultyId.Value.ToString() : "N/A")</td>
+                    <td>@(p.Language ?? "N/A")</td>
+                    <td>@(string.IsNullOrEmpty(p.Description) ? "N/A" : (p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description))</td>
+                    <td>@p.NumberOfSemester</td>
+                    <td>@p.TotalOfRequiredCredits</td>
+                    <td>@p.ObligatedCredits</td>
+                    <td>@p.ElectiveCredits</td>
+                    <td>@(p.CreatedAt.HasValue ? p.CreatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    <td>@(p.UpdatedAt.HasValue ? p.UpdatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    <td>@(p.IsDeleted ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Filter Modal *@
+<div id="filterModal" class="user-modal">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeFilterModal">&times;</span>
+        <h3>Filter Programs</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-6">
+                <label for="filterName" class="form-label">Program name contains</label>
+                <input type="text" class="form-control" id="filterName" />
+            </div>
+            <div class="col-md-3">
+                <label for="filterLanguage" class="form-label">Language</label>
+                <select class="form-select" id="filterLanguage">
+                    <option value="">Any</option>
+                    <option value="English">English</option>
+                    <option value="Vietnamese">Vietnamese</option>
+                    <option value="French">French</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filterMajorId" class="form-label">Major ID</label>
+                <input type="number" min="1" class="form-control" id="filterMajorId" />
+            </div>
+            <div class="col-md-6">
+                <label for="filterFacultyId" class="form-label">Faculty ID</label>
+                <input type="number" min="1" class="form-control" id="filterFacultyId" />
+            </div>
+            <div class="col-12" style="margin-top:8px;">
+                <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
+                <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $(".view-details").click(function(e) {
+                e.preventDefault();
+                const programId = $(this).data("id");
+                console.log("View program:", programId);
+                alert("View program details for ID: " + programId + " (chưa có logic).");
+            });
+
+            // Filter modal open/close
+            $("#filterBtn").on("click", function() {
+                $("#filterModal").css("display", "flex");
+            });
+            $("#closeFilterModal").on("click", function() {
+                $("#filterModal").hide();
+            });
+            // Close when clicking outside content
+            $("#filterModal").on("click", function(e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+
+            // Filter handlers
+            $("#applyFilterBtn").on("click", function() {
+                const filters = {
+                    name: $("#filterName").val(),
+                    language: $("#filterLanguage").val(),
+                    majorId: $("#filterMajorId").val(),
+                    facultyId: $("#filterFacultyId").val()
+                };
+                console.log("Apply filters:", filters);
+                $("#filterModal").hide();
+                // TODO: Hook up to server-side filtering or client-side filtering as needed
+
+                // Toggle filter indicator (red dot) if any filter is set
+                const anyFilter =
+                    (filters.name && filters.name.trim().length > 0) ||
+                    (filters.language && filters.language.trim().length > 0) ||
+                    (filters.majorId && String(filters.majorId).trim().length > 0) ||
+                    (filters.facultyId && String(filters.facultyId).trim().length > 0);
+
+                if (anyFilter) {
+                    $("#filterBtn").addClass("has-active-filters");
+                } else {
+                    $("#filterBtn").removeClass("has-active-filters");
+                }
+            });
+            $("#clearFilterBtn").on("click", function() {
+                $("#filterName").val("");
+                $("#filterLanguage").val("");
+                $("#filterMajorId").val("");
+                $("#filterFacultyId").val("");
+                $("#filterBtn").removeClass("has-active-filters");
+            });
+
+            // Test notifications cho các nút hành động
+            $("#searchBtn").click(function () {
+                alert("Search button clicked (chưa có logic).");
+            });
+            $("#addBtn").click(function () {
+                alert("Add button clicked (chưa có logic).");
+            });
+            $("#editBtn").click(function () {
+                alert("Edit button clicked (chưa có logic).");
+            });
+            $("#deleteBtn").click(function () {
+                alert("Delete button clicked (chưa có logic).");
+            });
+
+
+        });
+    </script>
 }

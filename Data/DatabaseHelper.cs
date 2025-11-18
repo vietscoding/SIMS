@@ -1,257 +1,333 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.EntityFrameworkCore;
 using SIMS.Models;
-using System.Reflection.Metadata.Ecma335;
+using System.Diagnostics.Contracts;
 
-// Lớp này chứa chìa khóa truy cập đến database và chứa các thao CRUD cơ bản lên các đối tượng trong SIMS (student, academic program,...)
 
 namespace SIMS.Data
 {
     public class DatabaseHelper
     {
-        private readonly string _connectionString;
+        private readonly AppDbContext _context;
 
-        public DatabaseHelper(IConfiguration configuration)
+        public DatabaseHelper(AppDbContext context)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _context = context;
+        }
+
+        public List<AcademicProgram> GetAllAcademicPrograms() // Lấy tất cả các chương trình học
+        {
+            return _context.AcademicPrograms
+                .AsNoTracking()
+                .OrderBy(p => p.AcademicProgramName ?? "")
+                .ToList();
+        }
+
+        public List<Person> GetAllPeople() // Lấy tất cả các người
+        {
+            return _context.People
+                .AsNoTracking()
+                .OrderBy(p => p.PersonId)
+                .ToList();
+        }
+        
+        public List<Student> GetAllStudents() // Lấy tất cả các sinh viên
+        {
+            return _context.Students
+                .Include(s => s.Person)
+                .AsNoTracking()
+                .OrderBy(s => s.StudentId)
+                .ToList();
+        }
+
+        public List<Course> GetAllCourses() // Lấy tất cả các học phần
+        {
+            return _context.Courses
+                .AsNoTracking()
+                .OrderBy(c => c.CourseName ?? "")
+                .ToList();
+        }
+
+        public List<Faculty> GetAllFaculties() // Lấy tất cả các khoa
+        {
+            return _context.Faculties
+                .AsNoTracking()
+                .OrderBy(f => f.FacultyName ?? "")
+                .ToList();
+        }
+
+        public List<Major> GetAllMajors() // Lấy tất cả các ngành
+        {
+            return _context.Majors
+                .AsNoTracking()
+                .OrderBy(m => m.MajorName ?? "")
+                .ToList();
         }
 
 
 
-        public List<AcademicProgram> GetAllAcademicPrograms()
+        public List<AcademicProgram> GetProgramsByMajorId(int majorId) // Lấy các chương trình học theo ID ngành
         {
-            var academicProgram = new List<AcademicProgram>();
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            return _context.AcademicPrograms
+                .AsNoTracking()
+                .Where(p => p.MajorId == majorId)
+                .OrderBy(p => p.AcademicProgramName ?? "")
+                .ToList();
+        }
+
+        public List<AcademicProgram> GetProgramsByFacultyId(int facultyId) // Lấy các chương trình học theo ID khoa
+        {
+            return _context.AcademicPrograms
+                .AsNoTracking()
+                .Where(p => p.FacultyId == facultyId)
+                .OrderBy(p => p.AcademicProgramName ?? "")
+                .ToList();
+        }
+
+        public AcademicProgram GetAcademicProgramById(int programId) // Lấy chương trình học theo ID
+        {
+            return _context.AcademicPrograms
+                .AsNoTracking()
+                .FirstOrDefault(p => p.AcademicProgramId == programId) ?? new AcademicProgram();  
+        }
+
+        public Student GetStudentById(int studentId) // Lấy sinh viên theo ID
+        {
+            return _context.Students
+                .Include(s => s.Person)
+                .AsNoTracking()
+                .FirstOrDefault(s => s.StudentId == studentId) ?? new Student();
+        }
+
+        public Person GetPersonById(int personId) // Lấy người theo ID
+        {
+            return _context.People
+                .AsNoTracking()
+                .FirstOrDefault(p => p.PersonId == personId) ?? new Person();
+        }
+
+        public Faculty GetFacultyById(int facultyId) // Lấy khoa theo ID
+        {
+            return _context.Faculties
+                .AsNoTracking()
+                .FirstOrDefault(f => f.FacultyId == facultyId) ?? new Faculty();
+        }
+
+        public Major GetMajorById(int majorId) // Lấy ngành theo ID
+        {
+            return _context.Majors
+                .AsNoTracking()
+                .FirstOrDefault(m => m.MajorId == majorId) ?? new Major();
+        }
+
+        public bool AddPerson(Person person) // Thêm người mới
+        {
+            _context.People.Add(person);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool AddStudent(Student student) // Thêm sinh viên mới
+        {
+            _context.Students.Add(student);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool AddCourse(Course course) // Thêm học phần mới
+        {
+            _context.Courses.Add(course);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool AddAcademicProgram(AcademicProgram program) // Thêm chương trình học mới
+        {
+            _context.AcademicPrograms.Add(program);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool AddFaculty(Faculty faculty) // Thêm khoa mới
+        {
+            _context.Faculties.Add(faculty);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool AddMajor(Major major) // Thêm ngành mới
+        {
+            _context.Majors.Add(major);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool RemoveStudent(int studentId) // Xóa sinh viên theo ID
+        {
+            var student = _context.Students.Find(studentId);
+            if (student == null)
             {
-                string query = "SELECT * FROM Program;";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        academicProgram.Add(new AcademicProgram
-                        {
-                            AcademicProgramId = Convert.ToInt32(reader["program_id"]),
-                            AcademicProgramName = reader["program_name"].ToString(),
-                            MajorId = Convert.ToInt32(reader["major_id"]),
-                            FacultyId = Convert.ToInt32(reader["faculty_id"]),
-                            Language = reader["program_language"].ToString(),
-                            Description = reader["program_description"].ToString(),
-                            NumberOfSemester = Convert.ToInt32(reader["number_of_semester"]),
-                            TotalOfRequiredCredits = Convert.ToInt32(reader["total_of_required_credits"]),
-                            ObligatedCredits = Convert.ToInt32(reader["obligated_credits"]),
-                            CreatedAt = reader["created_at"] == DBNull.Value ? DateTime.MinValue : (DateTime)reader["created_at"],
-                            UpdatedAt = reader["updated_at"] == DBNull.Value ? DateTime.MinValue : (DateTime)reader["updated_at"],
-                            IsDeleted = Convert.ToBoolean(reader["is_deleted"]),
-
-                        });
-                    }
-                }
-                return academicProgram;
+                return false;
             }
+            _context.Students.Remove(student);
+            return _context.SaveChanges() > 0;
         }
 
-        public List<Person> GetAllPeople()
+        public bool RemovePerson(int personId) // Xóa người theo ID
         {
-            var people = new List<Person>();
-
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            var person = _context.People.Find(personId);
+            if (person == null)
             {
-                string query = "SELECT * FROM Person;";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
+                return false;
+            }
+            _context.People.Remove(person);
+            return _context.SaveChanges() > 0;
+        }
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        people.Add(new Person
-                        {
-                            PersonId = reader.GetInt32(0).ToString(),
-                            CitizenIdNumber = reader.GetString(1),
-                            FullName = reader.GetString(4),
-                            Gender = reader.GetBoolean(5),
-                            DateOfBirth = reader.GetDateTime(6),
-                            Email = reader.GetString(7),
-                            PhoneNumber = reader.GetString(8),
-                            Address = reader.GetString(9),
-                            Nationality = reader.GetString(10),
-                            Created = reader.GetDateTime(11),
-                            Updated = reader.GetDateTime(12)
+        public bool RemoveCourse(int courseId) // Xóa học phần theo ID
+        {
+            var course = _context.Courses.Find(courseId);
+            if (course == null)
+            {
+                return false;
+            }
+            _context.Courses.Remove(course);
+            return _context.SaveChanges() > 0;
+        }   
 
-                        });
-                    }
-                }
+        public bool RemoveAcademicProgram(int programId) // Xóa chương trình học theo ID
+        {
+            var program = _context.AcademicPrograms.Find(programId);
+            if (program == null)
+            {
+                return false;
+            }
+            _context.AcademicPrograms.Remove(program);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool RemoveFaculty(int facultyId) // Xóa khoa theo ID
+        {
+            var faculty = _context.Faculties.Find(facultyId);
+            if (faculty == null)
+            {
+                return false;
+            }
+            _context.Faculties.Remove(faculty);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool RemoveMajor(int majorId) // Xóa ngành theo ID
+        {
+            var major = _context.Majors.Find(majorId);
+            if (major == null)
+            {
+                return false;
+            }
+            _context.Majors.Remove(major);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool UpdatePerson(Person person) // Cập nhật thông tin người
+        {
+            var existingPerson = _context.People.Find(person.PersonId);
+            if (existingPerson == null)
+            {
+                return false;
+            }
+            existingPerson.FullName = person.FullName;
+            existingPerson.DateOfBirth = person.DateOfBirth;
+            
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateCourse(Course course) // Cập nhật thông tin học phần
+        {
+            var existingCourse = _context.Courses.Find(course.CourseId);
+            if (existingCourse == null)
+            {
+                return false;
+            }
+            existingCourse.CourseName = course.CourseName;
+            
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateAcademicProgram(AcademicProgram program) // Cập nhật thông tin chương trình học
+        {
+            var existingProgram = _context.AcademicPrograms.Find(program.AcademicProgramId);
+            if (existingProgram == null)
+            {
+                return false;
+            }
+            existingProgram.AcademicProgramName = program.AcademicProgramName;
+            
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateFaculty(Faculty faculty) // Cập nhật thông tin khoa
+        {
+            var existingFaculty = _context.Faculties.Find(faculty.FacultyId);
+            if (existingFaculty == null)
+            {
+                return false;
+            }
+            existingFaculty.FacultyName = faculty.FacultyName;
+            
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateMajor(Major major) // Cập nhật thông tin ngành
+        {
+            var existingMajor = _context.Majors.Find(major.MajorId);
+            if (existingMajor == null)
+            {
+                return false;
+            }
+            existingMajor.MajorName = major.MajorName;
+            
+            _context.SaveChanges();
+            return true;
+        }
+
+        
+
+
+        public bool CanConnect()
+        {
+            return _context.Database.CanConnect();
+        }
+
+        public bool UpdateStudent(Student student) // Cập nhật thông tin sinh viên
+        {
+            var existingStudent = _context.Students
+                .Include(s => s.Person)
+                .FirstOrDefault(s => s.StudentId == student.StudentId);
+
+            if (existingStudent == null || existingStudent.Person == null)
+            {
+                return false;
             }
 
-            return people;
+            existingStudent.Person.PhoneNumber = student.PhoneNumber;
+            existingStudent.Person.Address = student.Address;
+            existingStudent.Person.Updated = DateTime.Now;
+
+            _context.Entry(existingStudent.Person).State = EntityState.Modified;
+            _context.SaveChanges();
+
+            return true;
         }
 
-        public Student GetStudentById(int studentId)
+
+        public IQueryable<Course> GetCourses()
         {
-            Student student = null;
-
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string query = @"
-                                SELECT 
-                                    p.person_id,
-                                    p.citizen_id_number,
-                                    p.full_name,
-                                    p.gender,
-                                    p.date_of_birth,
-                                    p.email,
-                                    p.phone_number,
-                                    p.address,
-                                    p.nationality,
-                                    s.student_id,
-                                    s.student_code,
-                                    s.program_id,
-                                    s.enrollment_date,
-                                    s.current_semester,
-                                    s.student_status_id,
-                                    s.gpa,
-                                    s.credits_earned,
-                                    s.expected_graduate_date,
-                                    s.phone_number_of_relatives
-                                FROM Person p
-                                JOIN Student s ON p.person_id = s.person_id
-                                WHERE s.student_id = @StudentId;
-                               ";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@StudentId", studentId);
-
-                    conn.Open();
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            student = new Student
-                            {
-                                PersonId = reader["person_id"].ToString(),
-                                CitizenIdNumber = reader["citizen_id_number"].ToString(),
-                                FullName = reader["full_name"].ToString(),
-                                Gender = reader["gender"] == DBNull.Value ? null : (bool?)reader.GetBoolean(reader.GetOrdinal("gender")),
-                                DateOfBirth = reader["date_of_birth"] == DBNull.Value ? null : (DateTime?)reader.GetDateTime(reader.GetOrdinal("date_of_birth")),
-                                Email = reader["email"].ToString(),
-                                PhoneNumber = reader["phone_number"].ToString(),
-                                Address = reader["address"].ToString(),
-                                Nationality = reader["nationality"].ToString(),
-                                StudentId = Convert.ToInt32(reader["student_id"]),
-                                StudentCode = reader["student_code"] == DBNull.Value ? "unknown" : reader["student_code"].ToString(),
-                                ProgramId = Convert.ToInt32(reader["program_id"]),
-                                EnrollmentDate = reader["enrollment_date"] == DBNull.Value ? DateTime.MinValue : (DateTime)reader["enrollment_date"],
-                                CurrentSemester = reader["current_semester"] == DBNull.Value ? (byte)0 : (byte)reader["current_semester"],
-                                StudentStatusId = reader["student_status_id"] == DBNull.Value ? 0 : (int)reader["student_status_id"],
-                                GPA = reader["gpa"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["gpa"]),
-                                CreditsEarned = reader["credits_earned"] == DBNull.Value ? (short)0 : (short)reader["credits_earned"],
-                                ExpectedGraduateDate = reader["expected_graduate_date"] == DBNull.Value ? DateTime.MinValue : (DateTime)reader["expected_graduate_date"],
-                                PhoneNumberOfRelatives = reader["phone_number_of_relatives"].ToString()
-                            };
-                        }
-                    }
-                }
-            }        
-
-            return student;
-
+            return _context.Courses;
         }
 
-        public List<Student> GetAllStudents()
+        public Course GetCourseById(int courseId)
         {
-            var students = new List<Student>();
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string query = @"
-                                SELECT 
-                                    p.person_id,
-                                    p.citizen_id_number,
-                                    p.full_name,
-                                    p.gender,
-                                    p.date_of_birth,
-                                    p.email,
-                                    p.phone_number,
-                                    p.address,
-                                    p.nationality,
-                                    s.student_id,
-                                    s.student_code,
-                                    s.program_id,
-                                    s.enrollment_date,
-                                    s.current_semester,
-                                    s.student_status_id,
-                                    s.gpa,
-                                    s.credits_earned,
-                                    s.expected_graduate_date,
-                                    s.phone_number_of_relatives
-                                FROM Person p
-                                JOIN Student s ON p.person_id = s.person_id;
-                                ";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        students.Add(new Student
-                        {
-                            PersonId = reader.GetInt32(0).ToString(),
-                            CitizenIdNumber = reader.GetString(1),
-                            FullName = reader.GetString(2),
-                            Gender = reader.GetBoolean(3),
-                            DateOfBirth = reader.GetDateTime(4),
-                            Email = reader.GetString(5),
-                            PhoneNumber = reader.GetString(6),
-                            Address = reader.GetString(7),
-                            Nationality = reader.GetString(8),
-                            StudentId = reader.GetInt32(9),
-                            //StudentCode = reader.GetString(10),
-                            StudentCode = "unknown",
-                            ProgramId = reader.GetInt32(11),
-                            EnrollmentDate = reader.GetDateTime(12),
-                            CurrentSemester = reader.GetByte(13),
-                            StudentStatusId = reader.GetInt32(14),
-                            GPA = reader.GetDecimal(15),
-                            CreditsEarned = reader.GetInt16(16),
-                            ExpectedGraduateDate = reader.GetDateTime(17),
-                            PhoneNumberOfRelatives = reader.GetString(18),
-                        });
-                    }
-                }
-            }
-
-            return students;
-
+            return _context.Courses
+                .AsNoTracking()
+                .FirstOrDefault(c => c.CourseId == courseId) ?? new Course();
         }
-
-        public bool UpdateStudent(Student student)
-        {
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string query = @"
-            UPDATE Person
-            SET phone_number = @PhoneNumber,
-                address = @Address,
-                updated = GETDATE()
-            WHERE person_id = @PersonId;
-        ";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@PhoneNumber", student.PhoneNumber ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Address", student.Address ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@PersonId", student.PersonId);
-
-                conn.Open();
-                int rows = cmd.ExecuteNonQuery();
-
-                return rows > 0;
-            }
-        }
-
 
     }
 }

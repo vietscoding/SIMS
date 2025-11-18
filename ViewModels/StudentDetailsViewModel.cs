@@ -4,8 +4,8 @@ namespace SIMS.ViewModels
 {
     public class StudentDetailsViewModel
     {
-        public List<Student> Students { get; set; }
-        public List<AcademicProgram> Programs { get; set; }
+        public List<Student> Students { get; set; } = new();
+        public List<AcademicProgram> Programs { get; set; } = new();
 
         public StudentDetailsViewModel() { }
     }
