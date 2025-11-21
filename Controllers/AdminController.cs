@@ -56,11 +56,13 @@ namespace SIMS.Controllers
                 .Take(pageSize)
                 .ToList();
 
+            ViewBag.Faculties = _db.GetAllDistinctFaculties();
             ViewBag.Page = page;
             ViewBag.TotalPages = totalPages;
 
             return View(data);
         }
+
         public IActionResult CourseDetails(int id)
         {
             var course = _db.GetCourseById(id);
@@ -70,6 +72,7 @@ namespace SIMS.Controllers
             }
             return View("Course", course);
         }
+
         [HttpGet]
         public IActionResult GetCourseDetails(int id) // Trả về kiểu JSON cho chi tiết học phần được gọi bằng AJAX trong trang Course.cshtml
         {
@@ -183,5 +186,99 @@ namespace SIMS.Controllers
                 }
             });
         }
+
+        // New endpoint to create a course via AJAX (expects JSON body)
+        [HttpPost]
+        public IActionResult AddCourse([FromBody] CourseCreateModel model)
+        {
+            if (model == null)
+            {
+                return BadRequest(new { message = "Invalid request payload." });
+            }
+
+            // Basic server-side validation
+            if (string.IsNullOrWhiteSpace(model.CourseName))
+            {
+                return BadRequest(new { message = "Course name is required." });
+            }
+            if (string.IsNullOrWhiteSpace(model.CourseCode))
+            {
+                return BadRequest(new { message = "Course code is required." });
+            }
+
+            // Validate FacultyId
+            if (model.FacultyId == null)
+            {
+                return BadRequest(new { message = "Faculty in charge is required." });
+            }
+            else
+            {
+                var list = _db.GetAllDistinctFaculties();
+                if (!list.Any(f => f.FacultyId == model.FacultyId))
+                {
+                    return BadRequest(new { message = "Specified faculty does not exist." });
+                }
+            }
+
+            var codeTrim = model.CourseCode.Trim();
+
+            // Duplicate check by CourseCode
+            var exists = _db.GetCourses().Any(c => (c.CourseCode ?? string.Empty) == codeTrim);
+            if (exists)
+            {
+                return Conflict(new { message = $"A course with code '{codeTrim}' already exists." });
+            }
+
+            // Map to entity
+            var course = new Course
+            {
+                CourseName = model.CourseName?.Trim(),
+                TenHocPhan = model.TenHocPhan?.Trim(),
+                CourseCode = codeTrim,
+                FacultyId = model.FacultyId,
+                LectureCredits = model.LectureCredits,
+                PracticalCredits = model.PracticalCredits,
+                InternshipCredits = model.InternshipCredits,
+                CapstoneCredits = model.CapstoneCredits,
+                CourseSummary = model.CourseSummary?.Trim(),
+                IsDeleted = false
+            };
+
+            // Compute TotalCredits if not provided
+            //decimal total = 0m;
+            //total += course.LectureCredits ?? 0m;
+            //total += course.PracticalCredits ?? 0m;
+            //total += course.InternshipCredits ?? 0m;
+            //total += course.CapstoneCredits ?? 0m;
+            //course.TotalCredits = total;
+
+            var added = _db.AddCourse(course);
+            if (added == false)
+            {
+                return StatusCode(500, new { message = "Failed to add course. Please try again." });
+            }
+
+            return Ok(new
+            {
+                message = "Course added successfully.",
+                course = new
+                {
+                    course.CourseId,
+                    course.CourseCode,
+                    course.CourseName,
+                    course.FacultyId,
+                    course.LectureCredits,
+                    course.PracticalCredits,
+                    course.InternshipCredits,
+                    course.CapstoneCredits,
+                    course.CourseSummary
+                    //course.TotalCredits // The database will compute this automatically
+                }
+            });
+        }
+
+        
+
+        
     }
 }

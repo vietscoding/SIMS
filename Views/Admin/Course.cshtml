@@ -52,7 +52,17 @@
                         </a>
                     </td>
                     <td>@c.CourseName</td>
-                    <td>@c.FacultyId</td>
+                    @{
+                        if (c.FacultyId == null)
+                        {
+                            <td>Not set yet</td>
+                        }
+                        else
+                        {
+                            <td>@c.FacultyId</td>
+                        }
+                    }
+                    
                     <td>@c.TotalCredits</td>
                     <td>@c.LectureCredits</td>
                     <td>@c.PracticalCredits</td>
@@ -106,18 +116,15 @@
                 />
             </div>
 
-
-            
-
             <div class="col-md-6">
                 <label for="courseCode" class="form-label">Course Code</label>
                 <input 
-                    type="number" 
+                    type="text" 
                     class="form-control" 
                     id="courseCode"
-                    placeholder="Required exactly 7 digits (e.g., 1234567)"
-                    min="7"
-                    max="7"
+                    placeholder="Exactly 7 digits (e.g., 1234567)"
+                    maxlength="7"
+                    pattern="[0-9]{7}"
                 />
             </div>
 
@@ -129,8 +136,17 @@
                        list="facultyInChargeList"
                        placeholder="(e.g., Faculty of Information Technology)" />
                 <datalist id="facultyInChargeList">
-                    <option value="Khoa Công nghệ Thông tin"></option>
+                    @{
+                        var faculties = ViewBag.Faculties as List<Faculty>; 
+                        foreach (var f in faculties)
+                        {
+                            <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
+                        }
+                    }
+                    @* <option value="Khoa Công nghệ Thông tin"></option> *@
+
                 </datalist>
+                <input type="hidden" id="facultyId" name="facultyId" value="" />
             </div>
             
             <div class="col-md-3">
@@ -142,6 +158,7 @@
                     placeholder="(e.g., 2.0)"
                     value="0"
                     min="0"
+                    step="0.5"
                 />
             </div>
 
@@ -154,7 +171,7 @@
                     placeholder="(e.g., 2.0)"
                     value="0"
                     min="0"
-
+                    step="0.5"
                 />
             </div>
 
@@ -167,7 +184,7 @@
                     placeholder="(e.g., 2.0)"
                     value="0"
                     min="0"
-
+                    step="0.5"
                 />
             </div>
 
@@ -180,6 +197,7 @@
                     placeholder="(e.g., 2.0)"
                     value="0"
                     min="0"
+                    step="0.5"
                 />
             </div>
 
@@ -188,7 +206,7 @@
                 <input 
                     type="number" 
                     class="form-control" 
-                    id="capstoneCredits" 
+                    id="totalCredits" 
                     readonly
                     placeholder="Readonly field"
                 />
@@ -204,24 +222,6 @@
                 />
             </div>
 
-
-            @* <div class="col-md-3">
-                <label for="filterType" class="form-label">Course type</label>
-                <select class="form-select" id="filterType">
-                    <option value="">Any</option>
-                    <option value="Required">Required</option>
-                    <option value="Elective">Elective</option>
-                    <option value="Optional">Optional</option>
-                </select>
-            </div> *@
-            @* <div class="col-md-3">
-                <label for="filterProgramId" class="form-label">Program ID</label>
-                <input type="number" min="1" class="form-control" id="filterProgramId" />
-            </div>
-            <div class="col-md-3">
-                <label for="filterSemester" class="form-label">Semester</label>
-                <input type="number" min="1" max="10" class="form-control" id="filterSemester" />
-            </div> *@
             <div class="col-12" style="margin-top:20px;">
                 <button id="addNewCourseBtn" type="button" class="btn btn-primary">Add</button>
                 <button id="cancelBtn" type="button" class="btn btn-outline-danger">Cancel</button>
@@ -229,8 +229,6 @@
         </div>
     </div>
 </div>
-
-
 
 @* Filter Modal *@
 <div id="filterModal" class="user-modal">
@@ -289,7 +287,7 @@
                     <p><strong>Course ID:</strong> <span id="detail-course-id"></span></p>
                     <p><strong>Code:</strong> <span id="detail-course-code"></span></p>
                     <p><strong>Name:</strong> <span id="detail-course-name"></span></p>
-                    <p><strong>Faculty ID:</strong> <span id="detail-faculty-id"></span></p>
+                    <p><strong>Faculty in charge:</strong> <span id="detail-faculty-id"></span></p>
                     <p><strong>Total Credits:</strong> <span id="detail-total-credits"></span></p>
                     <p><strong>Lecture:</strong> <span id="detail-lecture-credits"></span></p>
                     <p><strong>Practical:</strong> <span id="detail-practical-credits"></span></p>
@@ -311,6 +309,38 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+
+        // Khi người dùng chọn một option từ datalist
+        $("#facultyInCharge").on("input change", function () {
+            const inputVal = $(this).val().trim();
+            let selectedFacultyId = "";
+
+            // Duyệt qua tất cả option trong datalist để tìm tên khớp
+            $("#facultyInChargeList option").each(function () {
+                if ($(this).val() === inputVal) {
+                    selectedFacultyId = $(this).data("id");
+                    return false; // break
+                }
+            });
+
+            $("#facultyId").val(selectedFacultyId || ""); // nếu không tìm thấy thì để trống
+        });
+
+        // Trường hợp người dùng xóa hết hoặc nhập tay không khớp → reset facultyId
+        $("#facultyInCharge").on("blur", function () {
+            const val = $(this).val().trim();
+            let found = false;
+            $("#facultyInChargeList option").each(function () {
+                if ($(this).val() === val) {
+                    found = true;
+                    return false;
+                }
+            });
+            if (!found) {
+                $("#facultyId").val("");
+            }
+        });
+
         $(document).ready(function() {
 
             // Hide any traditional pagination if present (we rely on infinite scroll)
@@ -379,6 +409,96 @@
                 }
             });
 
+            // Update total credits whenever credit fields change
+            function updateTotalCredits() {
+                const lecture = parseFloat($("#lectureCredits").val() || 0) || 0;
+                const practical = parseFloat($("#practicalCredits").val() || 0) || 0;
+                const internship = parseFloat($("#internshipCredits").val() || 0) || 0;
+                const capstone = parseFloat($("#capstoneCredits").val() || 0) || 0;
+                const total = lecture + practical + capstone;
+                $("#totalCredits").val(total);
+            }
+            $("#lectureCredits, #practicalCredits, #internshipCredits, #capstoneCredits").on("input change", updateTotalCredits);
+
+            // Add new course handler
+            $("#addNewCourseBtn").on("click", function () {
+                
+                // Gọi hàm cập nhật tổng tín chỉ trước khi gửi
+                updateTotalCredits();
+                // client-side validation
+                const courseName = $("#courseName").val()?.toString().trim() || "";
+                const tenHocPhan = $("#tenHocPhan").val()?.toString().trim() || "";
+                const courseCode = $("#courseCode").val()?.toString().trim() || "";
+                const faculty = $("#facultyInCharge").val()?.toString().trim() || "";
+                const facultyId = $("#facultyId").val()?.toString().trim() || "";
+
+
+                const lecture = parseFloat($("#lectureCredits").val() || 0) || 0;
+                const practical = parseFloat($("#practicalCredits").val() || 0) || 0;
+                const internship = parseFloat($("#internshipCredits").val() || 0) || 0;
+                const capstone = parseFloat($("#capstoneCredits").val() || 0) || 0;
+                // const totalCredits = parseFloat($("#totalCredits").val() || 0) || 0;
+                const summary = $("#courseSummary").val()?.toString().trim() || "";
+
+                
+                if (!courseName) {
+                    alert("Course name is required.");
+                    return;
+                }
+                if (!/^\d{7}$/.test(courseCode)) {
+                    alert("Course code is required and must be exactly 7 digits.");
+                    return;
+                }
+                if (lecture < 0 || practical < 0 || internship < 0 || capstone < 0) {
+                    alert("Credit values must be 0 or positive.");
+                    return;
+                }
+
+                const payload = {
+                    courseName: courseName,
+                    tenHocPhan: tenHocPhan,
+                    courseCode: courseCode,
+                    facultyId: $("#facultyId").val() || null,
+                    lectureCredits: lecture,
+                    practicalCredits: practical,
+                    internshipCredits: internship,
+                    capstoneCredits: capstone,
+                    courseSummary: summary
+                };
+
+                // disable button while submitting
+                $("#addNewCourseBtn").prop("disabled", true).text("Adding...");
+
+                $.ajax({
+                    url: "/Admin/AddCourse",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        alert(res?.message || "Course added successfully.");
+                        $("#addCourseModal").hide();
+                        // reset form
+                        $("#courseName, #tenHocPhan, #courseCode, #facultyInCharge, #lectureCredits, #practicalCredits, #internshipCredits, #capstoneCredits, #courseSummary").val("");
+                        $("#totalCredits").val("");
+                        // refresh list to show newly added course: clear and reload
+                        resetAndLoad();
+                    },
+                    error: function (xhr) {
+                        let message = "Failed to add course.";
+                        try {
+                            const json = JSON.parse(xhr.responseText || "{}");
+                            if (json?.message) message = json.message;
+                        } catch (e) {
+                            // ignore parse error
+                        }
+                        alert(message);
+                    },
+                    complete: function () {
+                        $("#addNewCourseBtn").prop("disabled", false).text("Add");
+                    }
+                });
+            });
+
             // Infinite scroll and filter setup
             // Render server values as numeric literals
             let currentPage = @(ViewBag.Page ?? 1);
@@ -406,8 +526,6 @@
                 totalPages = 1; // Reset to trigger load
                 loadMoreCourses();
             }
-
-            
 
             // View details handler
             $(document).on("click", ".view-details", function (e) {

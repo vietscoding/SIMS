@@ -112,6 +112,14 @@ namespace SIMS.Data
                 .FirstOrDefault(f => f.FacultyId == facultyId) ?? new Faculty();
         }
 
+        public List<Faculty> GetAllDistinctFaculties()
+        {
+            return _context.Faculties
+                .GroupBy(f => f.FacultyName)
+                .Select(g => g.First())
+                .ToList();
+        }
+
         public Major GetMajorById(int majorId) // Lấy ngành theo ID
         {
             return _context.Majors

@@ -23,7 +23,7 @@ namespace SIMS.Models
         public int? FacultyId { get; set; }
 
         [Column("total_credits")]
-        public decimal? TotalCredits { get; set; }
+        public decimal? TotalCredits { get; private set; }
 
         [Column("lecture_credits")]
         public decimal? LectureCredits { get; set; }
