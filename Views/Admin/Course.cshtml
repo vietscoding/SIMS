@@ -31,7 +31,6 @@
                 <th>Internship Credits</th>
                 <th>Capstone Credits</th>
                 <th>Summary</th>
-                @* <th>Is Deleted</th> *@
             </tr>
         </thead>
         <tbody>
@@ -52,18 +51,14 @@
                         </a>
                     </td>
                     <td>@c.CourseName</td>
-                    @{
-                        if (c.FacultyId == null)
-                        {
-                            <td>Not set yet</td>
-                        }
-                        else
-                        {
-                            <td>@c.FacultyId</td>
-                        }
-                    }
-                    
-                    <td>@c.TotalCredits</td>
+                    <td>@(c.Faculty?.FacultyName ?? (c.FacultyId?.ToString() ?? "N/A"))</td>
+                    <td>
+                        @(
+                            c.TotalCredits.HasValue
+                                ? c.TotalCredits.Value.ToString()
+                                : ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)).ToString()
+                        )
+                    </td>
                     <td>@c.LectureCredits</td>
                     <td>@c.PracticalCredits</td>
                     <td>@c.InternshipCredits</td>
@@ -75,159 +70,7 @@
 
         </tbody>
     </table>
-    @*
-    <div class="pagination">
-        @if (ViewBag.Page > 1)
-        {
-            <a href="?page=@(ViewBag.Page - 1)">Previous</a>
-        }
-        <span>Page @ViewBag.Page of @ViewBag.TotalPages</span>
-        @if (ViewBag.Page < ViewBag.TotalPages)
-        {
-            <a href="?page=@(ViewBag.Page + 1)">Next</a>
-        }
-    </div>
-    *@
 
-</div>
-
-@* Add New Course Modal*@
-<div id="addCourseModal" class="user-modal">
-    <div class="user-modal-content">
-        <span class="close-modal" id="closeAddCourseModal">&times;</span>
-        <h3>Add New Course</h3>
-        <div class="row g-3" style="margin-top:12px;">
-            <div class="col-md-6">
-                <label for="courseName" class="form-label">Course Name</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseName" 
-                    placeholder="(e.g., Discrete Mathematics)"
-                />
-            </div>
-            <div class="col-md-6">
-                <label for="tenHocPhan" class="form-label">Tên Học Phần</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="tenHocPhan" 
-                    placeholder="(v.d., Toán Rời Rạc)"
-                />
-            </div>
-
-            <div class="col-md-6">
-                <label for="courseCode" class="form-label">Course Code</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseCode"
-                    placeholder="Exactly 7 digits (e.g., 1234567)"
-                    maxlength="7"
-                    pattern="[0-9]{7}"
-                />
-            </div>
-
-            <div class="col-md-6">
-                <label for="facultyInCharge" class="form-label">Faculty in charge</label>
-                <input type="text"
-                       class="form-control"
-                       id="facultyInCharge"
-                       list="facultyInChargeList"
-                       placeholder="(e.g., Faculty of Information Technology)" />
-                <datalist id="facultyInChargeList">
-                    @{
-                        var faculties = ViewBag.Faculties as List<Faculty>; 
-                        foreach (var f in faculties)
-                        {
-                            <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
-                        }
-                    }
-                    @* <option value="Khoa Công nghệ Thông tin"></option> *@
-
-                </datalist>
-                <input type="hidden" id="facultyId" name="facultyId" value="" />
-            </div>
-            
-            <div class="col-md-3">
-                <label for="lectureCredits" class="form-label">Lecture Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="lectureCredits"
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
-            </div>
-
-            <div class="col-md-3">
-                <label for="practicalCredits" class="form-label">Practical Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control"
-                    id="practicalCredits" 
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
-            </div>
-
-            <div class="col-md-3">
-                <label for="internshipCredits" class="form-label">Internship Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="internshipCredits"
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
-            </div>
-
-            <div class="col-md-3">
-                <label for="capstoneCredits" class="form-label">Capstone Credits</label>
-                <input 
-                    type="number"
-                    class="form-control" 
-                    id="capstoneCredits" 
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
-            </div>
-
-            <div class="col-md-3">
-                <label for="totalCredits" class="form-label">Total Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="totalCredits" 
-                    readonly
-                    placeholder="Readonly field"
-                />
-            </div>
-
-            <div class="col-md-9">
-                <label for="courseSummary" class="form-label">Course Summary</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseSummary" 
-                    placeholder="A meaningful description about this course..."
-                />
-            </div>
-
-            <div class="col-12" style="margin-top:20px;">
-                <button id="addNewCourseBtn" type="button" class="btn btn-primary">Add</button>
-                <button id="cancelBtn" type="button" class="btn btn-outline-danger">Cancel</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 @* Filter Modal *@
@@ -240,27 +83,78 @@
                 <label for="filterName" class="form-label">Course name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
-            <div class="col-md-3">
-                <label for="filterCode" class="form-label">Course code</label>
+            <div class="col-md-6">
+                <label for="filterCode" class="form-label">Course code contains</label>
                 <input type="text" class="form-control" id="filterCode" />
             </div>
-            <div class="col-md-3">
-                <label for="filterType" class="form-label">Course type</label>
-                <select class="form-select" id="filterType">
+
+            <div class="col-md-6">
+                <label for="filterFacultyId" class="form-label">Faculty in charge</label>
+                <select id="filterFacultyId" class="form-select">
                     <option value="">Any</option>
-                    <option value="Required">Required</option>
-                    <option value="Elective">Elective</option>
-                    <option value="Optional">Optional</option>
+                    @{
+                        var faculties = ViewBag.Faculties as List<Faculty>;
+                        if (faculties != null)
+                        {
+                            foreach (var f in faculties)
+                            {
+                                <option value="@f.FacultyId">@f.FacultyName</option>
+                            }
+                        }
+                    }
                 </select>
             </div>
+
             <div class="col-md-3">
-                <label for="filterProgramId" class="form-label">Program ID</label>
-                <input type="number" min="1" class="form-control" id="filterProgramId" />
+                <label class="form-label">Lecture Credits (min)</label>
+                <input type="number" step="0.5" min="0" id="filterLectureMin" class="form-control" />
             </div>
             <div class="col-md-3">
-                <label for="filterSemester" class="form-label">Semester</label>
-                <input type="number" min="1" max="10" class="form-control" id="filterSemester" />
+                <label class="form-label">Lecture Credits (max)</label>
+                <input type="number" step="0.5" min="0" id="filterLectureMax" class="form-control" />
             </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Practical Credits (min)</label>
+                <input type="number" step="0.5" min="0" id="filterPracticalMin" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Practical Credits (max)</label>
+                <input type="number" step="0.5" min="0" id="filterPracticalMax" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Internship Credits (min)</label>
+                <input type="number" step="0.5" min="0" id="filterInternshipMin" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Internship Credits (max)</label>
+                <input type="number" step="0.5" min="0" id="filterInternshipMax" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Capstone Credits (min)</label>
+                <input type="number" step="0.5" min="0" id="filterCapstoneMin" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Capstone Credits (max)</label>
+                <input type="number" step="0.5" min="0" id="filterCapstoneMax" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Total Credits (min)</label>
+                <input type="number" step="0.5" min="0" id="filterTotalMin" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Total Credits (max)</label>
+                <input type="number" step="0.5" min="0" id="filterTotalMax" class="form-control" />
+            </div>
+
+            <div class="col-md-12">
+                <label for="filterSummary" class="form-label">Course summary contains</label>
+                <input type="text" class="form-control" id="filterSummary" />
+            </div>
+
             <div class="col-12" style="margin-top:8px;">
                 <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
                 <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
@@ -309,7 +203,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-
         // Khi người dùng chọn một option từ datalist
         $("#facultyInCharge").on("input change", function () {
             const inputVal = $(this).val().trim();
@@ -362,23 +255,54 @@
 
             // Filter handlers
             $("#applyFilterBtn").on("click", function() {
-                filters = {
-                    name: $("#filterName").val().trim(),
-                    code: $("#filterCode").val().trim(),
-                    type: $("#filterType").val().trim(),
-                    programId: $("#filterProgramId").val().trim(),
-                    semester: $("#filterSemester").val().trim()
-                };
-                console.log("Apply filters:", filters);
-                $("#filterModal").hide();
+                const name = $("#filterName").val()?.toString().trim();
+                const code = $("#filterCode").val()?.toString().trim();
+                const facultyId = $("#filterFacultyId").val();
+                const summary = $("#filterSummary").val()?.toString().trim();
+
+                // Build filters object only including non-empty values so model binding of nullable types works
+                filters = {};
+                if (name) filters.name = name;
+                if (code) filters.code = code;
+                if (facultyId) {
+                    if (facultyId !== "") filters.facultyId = facultyId;
+                }
+                if (summary) filters.summary = summary;
+
+                const lectureMin = $("#filterLectureMin").val();
+                const lectureMax = $("#filterLectureMax").val();
+                if (lectureMin !== "") filters.lectureMin = lectureMin;
+                if (lectureMax !== "") filters.lectureMax = lectureMax;
+
+                const practicalMin = $("#filterPracticalMin").val();
+                const practicalMax = $("#filterPracticalMax").val();
+                if (practicalMin !== "") filters.practicalMin = practicalMin;
+                if (practicalMax !== "") filters.practicalMax = practicalMax;
+
+                const internshipMin = $("#filterInternshipMin").val();
+                const internshipMax = $("#filterInternshipMax").val();
+                if (internshipMin !== "") filters.internshipMin = internshipMin;
+                if (internshipMax !== "") filters.internshipMax = internshipMax;
+
+                const capstoneMin = $("#filterCapstoneMin").val();
+                const capstoneMax = $("#filterCapstoneMax").val();
+                if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
+                if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
+
+                const totalMin = $("#filterTotalMin").val();
+                const totalMax = $("#filterTotalMax").val();
+                if (totalMin !== "") filters.totalMin = totalMin;
+                if (totalMax !== "") filters.totalMax = totalMax;
 
                 // Toggle filter indicator (red dot) if any filter is set
-                const anyFilter = Object.values(filters).some(value => value.length > 0);
+                const anyFilter = Object.keys(filters).length > 0;
                 if (anyFilter) {
                     $("#filterBtn").addClass("has-active-filters");
                 } else {
                     $("#filterBtn").removeClass("has-active-filters");
                 }
+
+                $("#filterModal").hide();
 
                 // Reset and load with new filters
                 resetAndLoad();
@@ -387,12 +311,13 @@
             $("#clearFilterBtn").on("click", function() {
                 $("#filterName").val("");
                 $("#filterCode").val("");
-                $("#filterType").val("");
-                $("#filterProgramId").val("");
-                $("#filterSemester").val("");
+                $("#filterFacultyId").val("");
+                $("#filterSummary").val("");
+
+                $("#filterLectureMin, #filterLectureMax, #filterPracticalMin, #filterPracticalMax, #filterInternshipMin, #filterInternshipMax, #filterCapstoneMin, #filterCapstoneMax, #filterTotalMin, #filterTotalMax").val("");
+
                 filters = {};
                 $("#filterBtn").removeClass("has-active-filters");
-                // Reset and load without filters
                 resetAndLoad();
             });
 
@@ -603,14 +528,14 @@
                                                 ${c.courseCode || "N/A"}
                                             </a>
                                         </td>
-                                        <td>${c.courseName}</td>
-                                        <td>${c.facultyId}</td>
-                                        <td>${c.totalCredits}</td>
-                                        <td>${c.lectureCredits}</td>
-                                        <td>${c.practicalCredits}</td>
-                                        <td>${c.internshipCredits}</td>
-                                        <td>${c.capstoneCredits}</td>
-                                        <td>${c.courseSummary}</td>
+                                        <td>${c.courseName || ""}</td>
+                                        <td>${c.facultyName || (c.facultyId ?? "N/A")}</td>
+                                        <td>${c.totalCredits ?? 0}</td>
+                                        <td>${c.lectureCredits ?? 0}</td>
+                                        <td>${c.practicalCredits ?? 0}</td>
+                                        <td>${c.internshipCredits ?? 0}</td>
+                                        <td>${c.capstoneCredits ?? 0}</td>
+                                        <td>${c.courseSummary ?? ""}</td>
                                     </tr>
                                 `;
                                 $("tbody").append(row);
