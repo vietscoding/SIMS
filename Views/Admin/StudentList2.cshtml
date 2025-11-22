@@ -1,0 +1,136 @@
+﻿@model SIMS.ViewModels.StudentDetailsViewModel
+
+
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+
+@{
+    Layout = "_AdminLayout";
+
+}
+
+<h2>Students List</h2>
+<div class="actionBtnBox">
+    <form></form>
+    <button class="btn btn-primary" onclick="" style="margin-bottom: 1vh;">Search</button>
+    <button class="btn btn-success" onclick="" style="margin-bottom: 1vh;">Add</button>
+    <button class="btn btn-warning" onclick="" style="margin-bottom: 1vh;">Edit</button>
+    <button class="btn btn-danger" onclick="" style="margin-bottom: 1vh;">Delete</button>
+</div>
+
+<div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Person ID</th>
+                <th>Full Name</th>
+                <th>Citizen ID</th>
+                <th>Gender</th>
+                <th>Date of Birth</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Address</th>
+                <th>Nationality</th>
+                <th>Student ID</th>
+                <th>Student Code</th>
+                <th>Program ID</th>
+                <th>Program name</th>
+                <th>Enrollment Date</th>
+                <th>Current Semester</th>
+                <th>Status ID</th>
+                <th>GPA</th>
+                <th>Credits Earned</th>
+                <th>Expected Graduate Date</th>
+                <th>Relatives' Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var programs = Model.Programs;
+
+            }
+            @foreach (var s in Model.Students)
+            {
+                <tr>
+                    <td>
+                        <button class="btn btn-info btn-sm view-details" data-id="@s.StudentId">View</button>
+                    </td>
+                    <td><a>@s.PersonId</a></td>
+                    <td>
+                        <a href="#" class="view-details" data-id="@s.StudentId">
+                            @s.FullName
+                        </a>
+                    </td>
+                    <td>@s.CitizenIdNumber</td>
+                    <td>@(s.Gender.HasValue ? (s.Gender.Value ? "Male" : "Female") : "N/A")</td>
+                    <td>@(s.DateOfBirth.HasValue? s.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    <td>@s.Email</td>
+                    <td>@s.PhoneNumber</td>
+                    <td>@s.Address</td>
+                    <td>@s.Nationality</td>
+                    <td>@s.StudentId</td>
+                    <td>@s.StudentCode</td>
+                    <td>@s.ProgramId</td>
+                    <td>@s.</td>
+                    <td>@s.EnrollmentDate.ToString("yyyy-MM-dd")</td>
+                    <td>@s.CurrentSemester</td>
+                    <td>@s.StudentStatusId</td>
+                    <td>@s.GPA</td>
+                    <td>@s.CreditsEarned</td>
+                    <td>@s.ExpectedGraduateDate.ToString("yyyy-MM-dd")</td>
+                    <td>@s.PhoneNumberOfRelatives</td>
+
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Render cái `StudentDetailModal` vào đây. Tái sử dụng code*@
+@await Html.PartialAsync("StudentDetailModal")
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $(".view-details").click(function(e) {
+                e.preventDefault();
+                const studentId = $(this).data("id");
+
+                $.get("/Student/GetStudentById", { id: studentId }, function(data) {
+                    $("#studentId").val(data.studentId);
+                    $("#fullName").val(data.fullName);
+                    $("#email").val(data.email);
+                    $("#phone").val(data.phoneNumber);
+                    $("#address").val(data.address);
+                    $("#studentDetailModal").modal("show");
+                    // console.log(data);
+                });
+            });
+
+            $("#saveChangesBtn").click(function() {
+                const updatedData = {
+                    StudentId: $("#studentId").val(),
+                    PhoneNumber: $("#phone").val(),
+                    Address: $("#address").val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Student/UpdateStudent",
+                    data: updatedData,
+                    success: function() {
+                        alert("Saved successfully!");
+                        $("#studentDetailModal").modal("hide");
+                        location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+}
+

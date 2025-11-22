@@ -1,0 +1,277 @@
+﻿
+
+
+/* layout.css */
+root/css/layout.css
+/* Basic admin layout with collapsible left sidebar */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    font-family: Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #3F8F31; /* dark */
+    color: #fff;
+    transition: width 200ms ease;
+    overflow-y: auto; /* Changed to auto for internal scrolling if needed */
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Add this for fixed positioning */
+    top: 0; /* Add this */
+    left: 0; /* Add this */
+    bottom: 0; /* Add this */
+    z-index: 10; /* Add this to ensure it layers above content if needed */
+}
+
+.sidebar.collapsed {
+    width: 80px;
+}
+
+/* Header inside sidebar */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.brand {
+    font-weight: 600;
+}
+
+/* Toggle button */
+.sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Navigation */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 4px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: #e5e7eb;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+    .menu-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-weight: bold;
+    }
+
+.menu-item.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: bold;
+}
+
+.menu-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.menu-item:hover .menu-icon {
+    opacity: 1;
+}
+
+.menu-item.active .menu-icon {
+    opacity: 1;
+}
+
+.menu-text {
+    flex: 1;
+}
+
+/* Content area */
+.content {
+    flex: 1; /* Uncommented */
+    background: #f8fafc; /* Uncommented; adjust color if needed */
+    display: flex; /* Uncommented */
+    flex-direction: column; /* Uncommented */
+    transition: margin-left 200ms ease; /* Adjusted timing to match sidebar */
+    margin-left: 260px; /* Keeps content shifted right to align next to sidebar */
+}
+
+.topbar {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: #fff;
+}
+
+.main-body {
+    padding: 20px;
+    flex: 1;
+}
+
+/* When collapsed: hide text labels for menu items (simple technique) */
+.sidebar.collapsed + .content {
+    margin-left: 64px;
+}
+
+.sidebar.collapsed .brand {
+    display: none;
+}
+
+.sidebar.collapsed .menu-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar.collapsed .menu-text {
+    display: none;
+}
+
+@media (max-width: 800px) {
+    /* Mobile: make sidebar overlay and initially collapsed */
+    .admin-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 90;
+        transform: translateX(-100%);
+        transition: transform 200ms ease;
+        width: 260px;
+    }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+    .content {
+        margin-left: 0;
+    }
+}
+
+/* User Info Container in Sidebar */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin: 12px;
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+    .user-info:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.user-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.user-title {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* Modal Overlay */
+.user-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Modal Content */
+.user-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 80%;
+    max-width: 700px;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    animation: modalFadeIn 0.3s ease;
+    color: #111827;
+}
+
+@keyframes modalFadeIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Close button */
+.close-modal {
+    float: right;
+    font-size: 24px;
+    color: #555;
+    cursor: pointer;
+}
+
+/* Filter button active indicator */
+#filterBtn {
+    position: relative;
+}
+
+#filterBtn.has-active-filters::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dc3545; /* Bootstrap danger red */
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.85);
+}

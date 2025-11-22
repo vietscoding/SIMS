@@ -1,3 +1,5 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SIMS.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -5,8 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// ??ng k� repository v�o Dependency Injection container
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ??ng ký repository vào Dependency Injection container
 //builder.Services.AddScoped<IStudentRepository, InMemoryStudentRepository>();
+builder.Services.AddScoped<DatabaseHelper>(); // Đăng ký để inject
+
 
 
 var app = builder.Build();

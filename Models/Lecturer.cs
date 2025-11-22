@@ -8,7 +8,7 @@
         /// Thạc sĩ (Master)
         /// Tiến sĩ (Doctor/PhD)
         /// </summary>
-        public string academicDegree { get ; private set; }
+        public string academicDegree { get ; private set; } = string.Empty;
 
         /// <summary>
         /// Học hàm (Academic Title) là chức danh học thuật, thường được sử dụng trong môi trường giáo dục đại học, thể hiện vai trò hoặc vị trí của một người trong hệ thống giáo dục hoặc nghiên cứu. Học hàm không phải là bằng cấp mà là danh hiệu do cơ quan có thẩm quyền phong tặng, thường dựa trên thành tựu học thuật và nghiên cứu.
@@ -20,7 +20,7 @@
         /// Nhà nghiên cứu (Researcher) : Dùng cho những người tập trung vào nghiên cứu khoa học, có thể không giữ vai trò giảng dạy.
         /// Giáo sư thỉnh giảng (Adjunct Professor): Là giáo sư làm việc bán thời gian hoặc tạm thời tại một trường đại học.
         /// </summary>
-        public string academicTitle { get; private set; }
+        public string academicTitle { get; private set; } = string.Empty;
 
 
     }

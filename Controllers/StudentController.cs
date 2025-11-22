@@ -1,29 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SIMS.Data;
 using SIMS.Models;
-using SIMS.Services;
 
 namespace SIMS.Controllers
 {
     public class StudentController : Controller
     {
-        //// Giả lập database
-        //private static List<Student> students = new List<Student>
-        //{
-        //    new Student{"1", "Alice", DateTime.Now},
-        //    new Student{ StudentId="2", FullName = "Bob", DateOfBirth=DateTime.Now}
-        //};
+        private readonly DatabaseHelper _dbHelper;
 
-        //public IActionResult Index()
-        //{
-        //    return View(students);
-        //}
-
-        //public IActionResult Details(int id)
-        //{
-        //    var student = students.Find(s => s.Id.Equals(id));
-        //    return View(students);
-        //}
-
+        public StudentController(DatabaseHelper dbHelper)
+        {
+            _dbHelper = dbHelper;
+        }
 
         public IActionResult Index()
         {
@@ -37,9 +25,27 @@ namespace SIMS.Controllers
 
         public IActionResult Details()
         {
-            Student student = new("Id1", "student1",DateTime.Now);
-            return View(student);
+            return View();
         }
+
+        [HttpGet]
+        public IActionResult GetStudentById(int id)
+        {
+            var student = _dbHelper.GetStudentById(id);
+            if (student == null || student.StudentId == 0)
+                return NotFound();
+            return Json(student);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateStudent(Student student)
+        {
+            var result = _dbHelper.UpdateStudent(student);
+            if (!result)
+                return BadRequest("Update failed.");
+            return Ok();
+        }
+
 
     }
 }
