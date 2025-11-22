@@ -203,7 +203,25 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Khi người dùng chọn một option từ datalist
+                /* Make resetAndLoad available globally - safe fallback if the real function is defined later */
+        window.resetAndLoad = function () {
+            // best-effort reset: clear table and reset counters if they exist
+            try {
+                $("tbody").empty();
+            } catch (e) { /* ignore if DOM not ready */ }
+
+            window.sttCounter = 0;
+            window.currentPage = 0;
+            window.totalPages = 1;
+
+            if (typeof window.loadMoreCourses === "function") {
+                window.loadMoreCourses();
+            } else {
+                console.warn("loadMoreCourses not defined yet — reset will run when it becomes available.");
+            }
+        };
+
+                // Khi người dùng chọn một option từ datalist
         $("#facultyInCharge").on("input change", function () {
             const inputVal = $(this).val().trim();
             let selectedFacultyId = "";
@@ -347,7 +365,7 @@
 
             // Add new course handler
             $("#addNewCourseBtn").on("click", function () {
-                
+
                 // Gọi hàm cập nhật tổng tín chỉ trước khi gửi
                 updateTotalCredits();
                 // client-side validation
@@ -365,7 +383,7 @@
                 // const totalCredits = parseFloat($("#totalCredits").val() || 0) || 0;
                 const summary = $("#courseSummary").val()?.toString().trim() || "";
 
-                
+
                 if (!courseName) {
                     alert("Course name is required.");
                     return;
@@ -574,104 +592,112 @@
             autoFillIfNeeded();
         });
 
-        // Validation helpers for credit range pairs
-function parseNullableNumber(selector) {
-    const v = $(selector).val();
-    if (v === "" || v === null || v === undefined) return null;
-    const n = parseFloat(v);
-    return isNaN(n) ? null : n;
+                // Validation helpers for credit range pairs
+        function parseNullableNumber(selector) {
+            const v = $(selector).val();
+            if (v === "" || v === null || v === undefined) return null;
+            const n = parseFloat(v);
+            return isNaN(n) ? null : n;
+        }
+        function setFieldError($el, message) {
+            $el.addClass("is-invalid");
+            let $fb = $el.next(".invalid-feedback");
+            if (!$fb.length) {
+                $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
+            }
+            $fb.text(message);
+        }
+        function clearFieldError($el) {
+            $el.removeClass("is-invalid");
+            const $fb = $el.next(".invalid-feedback");
+            if ($fb.length) $fb.remove();
+        }
+        function validateRangePair(minSelector, maxSelector, label) {
+            const $min = $(minSelector), $max = $(maxSelector);
+            clearFieldError($min); clearFieldError($max);
+            const min = parseNullableNumber(minSelector);
+            const max = parseNullableNumber(maxSelector);
+            if (min !== null && max !== null && min > max) {
+                setFieldError($min, label + " min must be less than or equal to max.");
+                setFieldError($max, "");
+                return false;
+            }
+            return true;
+        }
+        // Wire up real-time validation for each pair
+        ["Lecture","Practical","Internship","Capstone","Total"].forEach(function(prefix) {
+            const minSel = "#filter" + prefix + "Min";
+            const maxSel = "#filter" + prefix + "Max";
+            $(minSel + "," + maxSel).on("input change", function() {
+                validateRangePair(minSel, maxSel, prefix + " credits");
+            });
+        });
+
+        // Replace / augment apply handler: validate before building filters
+        // (If your file already defines this handler, replace that block with the one below.)
+        $("#applyFilterBtn").off("click").on("click", function() {
+            // Validate all pairs first
+            const pairsValid =
+                validateRangePair("#filterLectureMin", "#filterLectureMax", "Lecture")
+                & validateRangePair("#filterPracticalMin", "#filterPracticalMax", "Practical")
+                & validateRangePair("#filterInternshipMin", "#filterInternshipMax", "Internship")
+                & validateRangePair("#filterCapstoneMin", "#filterCapstoneMax", "Capstone")
+                & validateRangePair("#filterTotalMin", "#filterTotalMax", "Total");
+            if (!pairsValid) {
+                // Focus first invalid input
+                const $firstInvalid = $(".is-invalid").first();
+                if ($firstInvalid.length) $firstInvalid.focus();
+                return; // stop - do not apply filters
+            }
+
+            // Existing filter build logic (unchanged)
+            const name = $("#filterName").val()?.toString().trim();
+            const code = $("#filterCode").val()?.toString().trim();
+            const facultyId = $("#filterFacultyId").val();
+            const summary = $("#filterSummary").val()?.toString().trim();
+
+            filters = {};
+            if (name) filters.name = name;
+            if (code) filters.code = code;
+            if (facultyId) { if (facultyId !== "") filters.facultyId = facultyId; }
+            if (summary) filters.summary = summary;
+
+            const lectureMin = $("#filterLectureMin").val();
+            const lectureMax = $("#filterLectureMax").val();
+            if (lectureMin !== "") filters.lectureMin = lectureMin;
+            if (lectureMax !== "") filters.lectureMax = lectureMax;
+
+            const practicalMin = $("#filterPracticalMin").val();
+            const practicalMax = $("#filterPracticalMax").val();
+            if (practicalMin !== "") filters.practicalMin = practicalMin;
+            if (practicalMax !== "") filters.practicalMax = practicalMax;
+
+            const internshipMin = $("#filterInternshipMin").val();
+            const internshipMax = $("#filterInternshipMax").val();
+            if (internshipMin !== "") filters.internshipMin = internshipMin;
+            if (internshipMax !== "") filters.internshipMax = internshipMax;
+
+            const capstoneMin = $("#filterCapstoneMin").val();
+            const capstoneMax = $("#filterCapstoneMax").val();
+            if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
+            if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
+
+            const totalMin = $("#filterTotalMin").val();
+            const totalMax = $("#filterTotalMax").val();
+            if (totalMin !== "") filters.totalMin = totalMin;
+            if (totalMax !== "") filters.totalMax = totalMax;
+
+            const anyFilter = Object.keys(filters).length > 0;
+            if (anyFilter) $("#filterBtn").addClass("has-active-filters"); else $("#filterBtn").removeClass("has-active-filters");
+
+            $("#filterModal").hide();
+            resetAndLoad();
+        });
+
+            // ... end of loadMoreCourses function ...
+        window.loadMoreCourses = loadMoreCourses;
+
+    </script>
+
 }
-function setFieldError($el, message) {
-    $el.addClass("is-invalid");
-    let $fb = $el.next(".invalid-feedback");
-    if (!$fb.length) {
-        $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
-    }
-    $fb.text(message);
-}
-function clearFieldError($el) {
-    $el.removeClass("is-invalid");
-    const $fb = $el.next(".invalid-feedback");
-    if ($fb.length) $fb.remove();
-}
-function validateRangePair(minSelector, maxSelector, label) {
-    const $min = $(minSelector), $max = $(maxSelector);
-    clearFieldError($min); clearFieldError($max);
-    const min = parseNullableNumber(minSelector);
-    const max = parseNullableNumber(maxSelector);
-    if (min !== null && max !== null && min > max) {
-        setFieldError($min, label + " min must be less than or equal to max.");
-        setFieldError($max, "");
-        return false;
-    }
-    return true;
-}
-// Wire up real-time validation for each pair
-["Lecture","Practical","Internship","Capstone","Total"].forEach(function(prefix) {
-    const minSel = "#filter" + prefix + "Min";
-    const maxSel = "#filter" + prefix + "Max";
-    $(minSel + "," + maxSel).on("input change", function() {
-        validateRangePair(minSel, maxSel, prefix + " credits");
-    });
-});
-
-// Replace / augment apply handler: validate before building filters
-// (If your file already defines this handler, replace that block with the one below.)
-$("#applyFilterBtn").off("click").on("click", function() {
-    // Validate all pairs first
-    const pairsValid =
-        validateRangePair("#filterLectureMin", "#filterLectureMax", "Lecture")
-        & validateRangePair("#filterPracticalMin", "#filterPracticalMax", "Practical")
-        & validateRangePair("#filterInternshipMin", "#filterInternshipMax", "Internship")
-        & validateRangePair("#filterCapstoneMin", "#filterCapstoneMax", "Capstone")
-        & validateRangePair("#filterTotalMin", "#filterTotalMax", "Total");
-    if (!pairsValid) {
-        // Focus first invalid input
-        const $firstInvalid = $(".is-invalid").first();
-        if ($firstInvalid.length) $firstInvalid.focus();
-        return; // stop - do not apply filters
-    }
-
-    // Existing filter build logic (unchanged)
-    const name = $("#filterName").val()?.toString().trim();
-    const code = $("#filterCode").val()?.toString().trim();
-    const facultyId = $("#filterFacultyId").val();
-    const summary = $("#filterSummary").val()?.toString().trim();
-
-    filters = {};
-    if (name) filters.name = name;
-    if (code) filters.code = code;
-    if (facultyId) { if (facultyId !== "") filters.facultyId = facultyId; }
-    if (summary) filters.summary = summary;
-
-    const lectureMin = $("#filterLectureMin").val();
-    const lectureMax = $("#filterLectureMax").val();
-    if (lectureMin !== "") filters.lectureMin = lectureMin;
-    if (lectureMax !== "") filters.lectureMax = lectureMax;
-
-    const practicalMin = $("#filterPracticalMin").val();
-    const practicalMax = $("#filterPracticalMax").val();
-    if (practicalMin !== "") filters.practicalMin = practicalMin;
-    if (practicalMax !== "") filters.practicalMax = practicalMax;
-
-    const internshipMin = $("#filterInternshipMin").val();
-    const internshipMax = $("#filterInternshipMax").val();
-    if (internshipMin !== "") filters.internshipMin = internshipMin;
-    if (internshipMax !== "") filters.internshipMax = internshipMax;
-
-    const capstoneMin = $("#filterCapstoneMin").val();
-    const capstoneMax = $("#filterCapstoneMax").val();
-    if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
-    if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
-
-    const totalMin = $("#filterTotalMin").val();
-    const totalMax = $("#filterTotalMax").val();
-    if (totalMin !== "") filters.totalMin = totalMin;
-    if (totalMax !== "") filters.totalMax = totalMax;
-
-    const anyFilter = Object.keys(filters).length > 0;
-    if (anyFilter) $("#filterBtn").addClass("has-active-filters"); else $("#filterBtn").removeClass("has-active-filters");
-
-    $("#filterModal").hide();
-    resetAndLoad();
-});
+    
