@@ -215,7 +215,7 @@
 
             <div class="col-12" style="margin-top:20px;">
                 <button id="addNewCourseBtn" type="button" class="btn btn-primary">Add</button>
-                <button id="cancelBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+                <button id="cancelAddCourseBtn" type="button" class="btn btn-outline-danger">Cancel</button>
             </div>
         </div>
     </div>
@@ -344,7 +344,23 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
 
-        // Khi người dùng chọn một option từ datalist
+        // Khi user ở trong (các) modal nhấn esc để thoát
+        $(document).on("keydown", function(e) {
+            if (e.key === "Escape") {
+                $("#addCourseModal").hide();
+                $("#courseDetailsModal").hide();
+                $("#filterModal").hide();
+            }
+        });
+
+        // Khi user đang trong modal Add Course nhấn Enter để submit
+        $(document).on("keydown", function (e) {
+            if (e.key === "Enter" && $("#addCourseModal").is(":visible")) {
+                $("#addNewCourseBtn").click();
+            }
+        });
+
+        // Khi user chọn một option từ datalist
         $("#facultyInCharge").on("input change", function () {
             const inputVal = $(this).val().trim();
             let selectedFacultyId = "";
@@ -360,7 +376,7 @@
             $("#facultyId").val(selectedFacultyId || ""); // nếu không tìm thấy thì để trống
         });
 
-        // Trường hợp người dùng xóa hết hoặc nhập tay không khớp → reset facultyId
+        // Trường hợp user xóa hết hoặc nhập tay không khớp → reset facultyId
         $("#facultyInCharge").on("blur", function () {
             const val = $(this).val().trim();
             let found = false;
@@ -471,11 +487,16 @@
             $("#closeAddCourseModal").on("click", function() {
                 $("#addCourseModal").hide();
             });
+            $("#cancelAddCourseBtn").on("click", function() {
+                $("#addCourseModal").hide();
+            });
             $("#addCourseModal").on("click", function(e) {
                 if (e.target === this) {
                     $(this).hide();
                 }
             });
+            
+
 
             // Update total credits whenever credit fields change
             function updateTotalCredits() {
@@ -487,6 +508,7 @@
                 $("#totalCredits").val(total);
             }
             $("#lectureCredits, #practicalCredits, #internshipCredits, #capstoneCredits").on("input change", updateTotalCredits);
+
 
             // Add new course handler
             $("#addNewCourseBtn").on("click", function () {
