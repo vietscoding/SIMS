@@ -102,6 +102,7 @@ namespace SIMS.Controllers
                 courseId = course.CourseId,
                 courseCode = course.CourseCode,
                 courseName = course.CourseName,
+                tenHocPhan = course.TenHocPhan,
                 facultyId = course.FacultyId,
                 facultyName = course.Faculty?.FacultyName,
                 totalCredits = totalCredits,
@@ -315,14 +316,6 @@ namespace SIMS.Controllers
                 currentPage = page,
                 totalPages = totalPages,
                 totalItems = totalItems,
-                //appliedFilters = new
-                //{
-                //    name = name,
-                //    code = code,
-                //    type = type,
-                //    programId = programId,
-                //    semester = semester
-                //}
                 
             });
         }
