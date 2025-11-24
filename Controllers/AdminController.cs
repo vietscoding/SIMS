@@ -48,7 +48,8 @@ namespace SIMS.Controllers
         public IActionResult Course(int page = 1)
         {
             int pageSize = 10;
-            var query = _db.GetCourses(); // IQueryable (now includes Faculty)
+            // Include Faculty so server-rendered rows can show FacultyName
+            var query = _db.GetCourses().Include(c => c.Faculty); // IQueryable
             int totalItems = query.Count();
             int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
             var data = query
@@ -63,7 +64,6 @@ namespace SIMS.Controllers
 
             return View(data);
         }
-
         public IActionResult CourseDetails(int id)
         {
             var course = _db.GetCourseById(id);
@@ -81,19 +81,30 @@ namespace SIMS.Controllers
             {
                 return BadRequest(new { message = "Invalid course ID." });
             }
-            var course = _db.GetCourseById(id);
+
+            var course = _db.GetCourses()
+                .Include(c => c.Faculty)
+                .AsNoTracking()
+                .FirstOrDefault(c => c.CourseId == id);
+
             if (course == null || course.CourseId == 0)
             {
                 return NotFound(new { message = "Course not found." });
             }
+
+            decimal totalCredits = (course.LectureCredits ?? 0m)
+                                  + (course.PracticalCredits ?? 0m)
+                                  + (course.InternshipCredits ?? 0m)
+                                  + (course.CapstoneCredits ?? 0m);
+
             return Json(new
             {
                 courseId = course.CourseId,
                 courseCode = course.CourseCode,
                 courseName = course.CourseName,
                 facultyId = course.FacultyId,
-                facultyName = course.Faculty?.FacultyName ?? "Not set yet",
-                //totalCredits = course.TotalCredits,
+                facultyName = course.Faculty?.FacultyName,
+                totalCredits = totalCredits,
                 lectureCredits = course.LectureCredits,
                 practicalCredits = course.PracticalCredits,
                 internshipCredits = course.InternshipCredits,
@@ -102,15 +113,7 @@ namespace SIMS.Controllers
             });
         }
 
-        // Added server-side filtering support: name, code, type, programId, semester.
-        // name -> matches CourseName or TenHocPhan
-        // code -> matches CourseCode
-        // type/programId/semester: these properties are not present directly on Course in the current model,
-        // so type will attempt a best-effort match against CourseSummary/CourseName and programId/semester are accepted
-        // but currently ignored (no related navigation present). They are kept for API compatibility and future extension.
-
-        // Old GetCourses
-
+        // Server-side filtered paging for infinite scroll
         [HttpGet]
         public IActionResult GetCourses(
             int page = 1,
@@ -125,18 +128,18 @@ namespace SIMS.Controllers
             string? summary = null)
         {
             int pageSize = 10;
-            var query = _db.GetCourses(); // IQueryable<Course> (includes Faculty)
+            // Include Faculty so we can return faculty name in the projection
+            var query = _db.GetCourses().Include(c => c.Faculty).AsQueryable();
 
             // Exclude deleted records if applicable
             query = query.Where(c => !c.IsDeleted);
 
-            // Apply filters
             if (!string.IsNullOrWhiteSpace(name))
             {
                 var term = name.Trim();
                 query = query.Where(c =>
-                    ((c.CourseName ?? string.Empty).Contains(term)) ||
-                    ((c.TenHocPhan ?? string.Empty).Contains(term))
+                    (c.CourseName ?? string.Empty).Contains(term) ||
+                    (c.TenHocPhan ?? string.Empty).Contains(term)
                 );
             }
 
@@ -160,6 +163,57 @@ namespace SIMS.Controllers
                 );
             }
 
+            // Credit range filters. Use null-coalescing arithmetic so EF Core can translate
+            if (lectureMin.HasValue)
+            {
+                query = query.Where(c => (c.LectureCredits ?? 0m) >= lectureMin.Value);
+            }
+            if (lectureMax.HasValue)
+            {
+                query = query.Where(c => (c.LectureCredits ?? 0m) <= lectureMax.Value);
+            }
+
+            if (practicalMin.HasValue)
+            {
+                query = query.Where(c => (c.PracticalCredits ?? 0m) >= practicalMin.Value);
+            }
+            if (practicalMax.HasValue)
+            {
+                query = query.Where(c => (c.PracticalCredits ?? 0m) <= practicalMax.Value);
+            }
+
+            if (internshipMin.HasValue)
+            {
+                query = query.Where(c => (c.InternshipCredits ?? 0m) >= internshipMin.Value);
+            }
+            if (internshipMax.HasValue)
+            {
+                query = query.Where(c => (c.InternshipCredits ?? 0m) <= internshipMax.Value);
+            }
+
+            if (capstoneMin.HasValue)
+            {
+                query = query.Where(c => (c.CapstoneCredits ?? 0m) >= capstoneMin.Value);
+            }
+            if (capstoneMax.HasValue)
+            {
+                query = query.Where(c => (c.CapstoneCredits ?? 0m) <= capstoneMax.Value);
+            }
+
+            // Total credits computed from components
+            // Note: EF Core can translate arithmetic of nullable columns when using ?? 0m
+            if (totalMin.HasValue)
+            {
+                query = query.Where(c =>
+                    ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m))
+                    >= totalMin.Value);
+            }
+            if (totalMax.HasValue)
+            {
+                query = query.Where(c =>
+                    ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m))
+                    <= totalMax.Value);
+            }
             // Credit range filters. Use null-coalescing arithmetic so EF Core can translate
 
             if (lectureMin.HasValue)
@@ -251,7 +305,7 @@ namespace SIMS.Controllers
                     courseName = c.CourseName,
                     facultyId = c.FacultyId,
                     facultyName = c.Faculty?.FacultyName,
-                    totalCredits = c.LectureCredits + c.PracticalCredits + c.CapstoneCredits,
+                    totalCredits = ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)),
                     lectureCredits = c.LectureCredits,
                     practicalCredits = c.PracticalCredits,
                     internshipCredits = c.InternshipCredits,
@@ -269,149 +323,9 @@ namespace SIMS.Controllers
                 //    programId = programId,
                 //    semester = semester
                 //}
+                
             });
         }
-
-        // New GetCourses with extended filtering on credit ranges and summary
-        //[HttpGet]
-        //public IActionResult GetCourses(
-        //    int page = 1,
-        //    string? name = null,
-        //    string? code = null,
-        //    int? facultyId = null,
-        //    decimal? lectureMin = null, decimal? lectureMax = null,
-        //    decimal? practicalMin = null, decimal? practicalMax = null,
-        //    decimal? internshipMin = null, decimal? internshipMax = null,
-        //    decimal? capstoneMin = null, decimal? capstoneMax = null,
-        //    decimal? totalMin = null, decimal? totalMax = null,
-        //    string? summary = null)
-        //{
-
-        //    int pageSize = 10;
-        //    // Include Faculty so we can return faculty name in the projection
-        //    var query = _db.GetCourses().Include(c => c.Faculty).AsQueryable();
-        //    // Exclude deleted records if applicable
-
-        //    query = query.Where(c => !c.IsDeleted);
-
-        //    if (!string.IsNullOrWhiteSpace(name))
-        //    {
-        //        var term = name.Trim();
-        //        query = query.Where(c =>
-        //            (c.CourseName ?? string.Empty).Contains(term) ||
-        //            (c.TenHocPhan ?? string.Empty).Contains(term)
-        //        );
-        //    }
-
-        //    if (!string.IsNullOrWhiteSpace(code))
-        //    {
-        //        var term = code.Trim();
-        //        quẻquery.Where(c => (c.CourseCode ?? string.Empty).Contains(term));
-        //    }
-
-        //    if (facultyId.HasValue)
-        //    {
-        //        query = query.Where(c => c.FacultyId == facultyId.Value);
-        //    }
-
-        //    if (!string.IsNullOrWhiteSpace(summary))
-        //    {
-        //        var term = summary.Trim();
-        //        query = query.Where(c =>
-        //            (c.CourseSummary ?? string.Empty).Contains(term) ||
-        //            (c.CourseName ?? string.Empty).Contains(term)
-        //        );
-        //    }
-
-        //    // Credit range filters. Use null-coalescing arithmetic so EF Core can translate
-
-        //    if (lectureMin.HasValue)
-        //    {
-        //        query = query.Where(c => (c.LectureCredits ?? 0m) >= lectureMin.Value);
-        //    }
-
-        //    if (lectureMax.HasValue)
-        //    {
-        //        query = query.Where(c => (c.LectureCredits ?? 0m) <= lectureMax.Value);
-        //    }
-
-        //    if (practicalMin.HasValue)
-        //    {
-        //        query = query.Where(c => (c.PracticalCredits ?? 0m) >= practicalMin.Value);
-        //    }
-
-        //    if (practicalMax.HasValue)
-        //    {
-        //        query = query.Where(c => (c.PracticalCredits ?? 0m) <= practicalMax.Value);
-        //    }
-
-        //    if (internshipMin.HasValue)
-        //    {
-        //        query = query.Where(c => (c.InternshipCredits ?? 0m) >= internshipMin.Value);
-        //    }
-
-        //    if (internshipMax.HasValue)
-        //    {
-        //        query = query.Where(c => (c.InternshipCredits ?? 0m) <= internshipMax.Value);
-        //    }
-
-        //    if (capstoneMin.HasValue)
-        //    {
-        //        query = query.Where(c => (c.CapstoneCredits ?? 0m) >= capstoneMin.Value);
-        //    }
-
-        //    if (capstoneMax.HasValue)
-        //    {
-        //        query = query.Where(c => (c.CapstoneCredits ?? 0m) <= capstoneMax.Value);
-        //    }
-
-        //    // Total credits computed from components
-        //    // Note: EF Core can translate arithmetic of nullable columns when using ?? 0m
-        //    if (totalMin.HasValue)
-        //    {
-        //        query = query.Where(c =>
-        //            ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)) >= totalMin.Value);
-        //    }
-        //    if (totalMax.HasValue)
-        //    {
-        //        query = query.Where(c =>
-        //            ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)) <= totalMax.Value);
-        //    }
-        //    //int totalItems = query.Count();
-        //    //int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        //    // Calculate totals after filtering
-        //    int totalItems = query.Count();
-        //    int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        //    var data = query
-        //        .OrderBy(c => c.CourseId)
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize)
-        //        .ToList();
-
-        //    return Json(new
-        //    {
-        //        courses = data.Select(c => new
-        //        {
-        //            courseId = c.CourseId,
-        //            courseCode = c.CourseCode,
-        //            courseName = c.CourseName,
-        //            facultyId = c.FacultyId,
-        //            facultyName = c.Faculty?.FacultyName,
-        //            totalCredits = c.LectureCredits + c.PracticalCredits + c.CapstoneCredits,
-        //            lectureCredits = c.LectureCredits,
-        //            practicalCredits = c.PracticalCredits,
-        //            internshipCredits = c.InternshipCredits,
-        //            capstoneCredits = c.CapstoneCredits,
-        //            courseSummary = c.CourseSummary
-        //        }),
-        //        currentPage = page,
-        //        totalPages = totalPages,
-        //        totalItems = totalItems
-        //    });
-        //}
-
 
         // New endpoint to create a course via AJAX (expects JSON body)
         [HttpPost]
@@ -470,14 +384,6 @@ namespace SIMS.Controllers
                 IsDeleted = false
             };
 
-            // Compute TotalCredits if not provided
-            //decimal total = 0m;
-            //total += course.LectureCredits ?? 0m;
-            //total += course.PracticalCredits ?? 0m;
-            //total += course.InternshipCredits ?? 0m;
-            //total += course.CapstoneCredits ?? 0m;
-            //course.TotalCredits = total;
-
             var added = _db.AddCourse(course);
             if (added == false)
             {
@@ -498,13 +404,8 @@ namespace SIMS.Controllers
                     course.InternshipCredits,
                     course.CapstoneCredits,
                     course.CourseSummary
-                    //course.TotalCredits // The database will compute this automatically
                 }
             });
         }
-
-        
-
-        
     }
 }

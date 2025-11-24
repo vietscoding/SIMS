@@ -7,7 +7,6 @@
 <h2>Courses List</h2>
 <div class="actionBtnBox">
     <form></form>
-    <button id="searchCourseBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;">Search</button>
     <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh;">Filter</button>
     <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-bottom: 1vh;">Add</button>
     <button id="editCourseBtn" type="button" class="btn btn-warning" style="margin-bottom: 1vh;">Edit</button>
@@ -15,7 +14,6 @@
 </div>
 
 <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
-
     <table class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -31,7 +29,6 @@
                 <th>Internship Credits</th>
                 <th>Capstone Credits</th>
                 <th>Summary</th>
-                @* <th>Is Deleted</th> *@
             </tr>
         </thead>
         <tbody>
@@ -56,13 +53,22 @@
                         var facultyName = c.Faculty?.FacultyName;
                         if (string.IsNullOrWhiteSpace(facultyName))
                         {
-                            <td>Not set yet</td>
+                            <td><em>Not set yet</em></td>
                         }
                         else
                         {
                             <td>@facultyName</td>
                         }
                     }
+                    
+                    @* <td>@(c.Faculty?.FacultyName ?? (c.FacultyId?.ToString() ?? "N/A"))</td> *@
+                    @* <td>
+                        @(
+                            c.TotalCredits.HasValue
+                                ? c.TotalCredits.Value.ToString()
+                                : ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)).ToString()
+                        )
+                    </td> *@
                     @{
 
                         decimal? totalCredits = c.LectureCredits + c.PracticalCredits + c.CapstoneCredits;
@@ -72,14 +78,22 @@
                     <td>@c.PracticalCredits</td>
                     <td>@c.InternshipCredits</td>
                     <td>@c.CapstoneCredits</td>
-                    <td>@c.CourseSummary</td>
+                    <td>
+                        @if (string.IsNullOrEmpty(c.CourseSummary))
+                        {
+                            @Html.Raw("<em>Not set yet</em>")
+                        }
+                        else
+                        {
+                            @c.CourseSummary
+                        }
+                    </td>
                 </tr>
                  stt++;
             }
 
         </tbody>
     </table>
-    
 </div>
 
 @* Add New Course Modal*@
@@ -90,33 +104,27 @@
         <div class="row g-3" style="margin-top:12px;">
             <div class="col-md-6">
                 <label for="courseName" class="form-label">Course Name</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseName" 
-                    placeholder="(e.g., Discrete Mathematics)"
-                />
+                <input type="text"
+                       class="form-control"
+                       id="courseName"
+                       placeholder="(e.g., Discrete Mathematics)" />
             </div>
             <div class="col-md-6">
                 <label for="tenHocPhan" class="form-label">Tên Học Phần</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="tenHocPhan" 
-                    placeholder="(v.d., Toán Rời Rạc)"
-                />
+                <input type="text"
+                       class="form-control"
+                       id="tenHocPhan"
+                       placeholder="(v.d., Toán Rời Rạc)" />
             </div>
 
             <div class="col-md-6">
                 <label for="courseCode" class="form-label">Course Code</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseCode"
-                    placeholder="Exactly 7 digits (e.g., 1234567)"
-                    maxlength="7"
-                    pattern="[0-9]{7}"
-                />
+                <input type="text"
+                       class="form-control"
+                       id="courseCode"
+                       placeholder="Exactly 7 digits (e.g., 1234567)"
+                       maxlength="7"
+                       pattern="[0-9]{7}" />
             </div>
 
             <div class="col-md-6">
@@ -128,7 +136,7 @@
                        placeholder="(e.g., Faculty of Information Technology)" />
                 <datalist id="facultyInChargeList">
                     @{
-                        var faculties = ViewBag.Faculties as List<Faculty>; 
+                        var faculties = ViewBag.Faculties as List<Faculty>;
                         foreach (var f in faculties)
                         {
                             <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
@@ -139,83 +147,71 @@
                 </datalist>
                 <input type="hidden" id="facultyId" name="facultyId" value="" />
             </div>
-            
+
             <div class="col-md-3">
                 <label for="lectureCredits" class="form-label">Lecture Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="lectureCredits"
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
+                <input type="number"
+                       class="form-control"
+                       id="lectureCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
             </div>
 
             <div class="col-md-3">
                 <label for="practicalCredits" class="form-label">Practical Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control"
-                    id="practicalCredits" 
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
+                <input type="number"
+                       class="form-control"
+                       id="practicalCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
             </div>
 
             <div class="col-md-3">
                 <label for="internshipCredits" class="form-label">Internship Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="internshipCredits"
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
+                <input type="number"
+                       class="form-control"
+                       id="internshipCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
             </div>
 
             <div class="col-md-3">
                 <label for="capstoneCredits" class="form-label">Capstone Credits</label>
-                <input 
-                    type="number"
-                    class="form-control" 
-                    id="capstoneCredits" 
-                    placeholder="(e.g., 2.0)"
-                    value="0"
-                    min="0"
-                    step="0.5"
-                />
+                <input type="number"
+                       class="form-control"
+                       id="capstoneCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
             </div>
 
             <div class="col-md-3">
                 <label for="totalCredits" class="form-label">Total Credits</label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    id="totalCredits" 
-                    readonly
-                    placeholder="Readonly field"
-                />
+                <input type="number"
+                       class="form-control"
+                       id="totalCredits"
+                       readonly
+                       placeholder="Readonly field" />
             </div>
 
             <div class="col-md-9">
                 <label for="courseSummary" class="form-label">Course Summary</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    id="courseSummary" 
-                    placeholder="A meaningful description about this course..."
-                />
+                <input type="text"
+                       class="form-control"
+                       id="courseSummary"
+                       placeholder="A meaningful description about this course..." />
             </div>
 
             <div class="col-12" style="margin-top:20px;">
                 <button id="addNewCourseBtn" type="button" class="btn btn-primary">Add</button>
-                <button id="cancelAddCourseBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+                <button id="cancelAddNewCourseBtn" type="button" class="btn btn-outline-danger">Cancel</button>
             </div>
         </div>
     </div>
@@ -227,23 +223,25 @@
         <span class="close-modal" id="closeFilterModal">&times;</span>
         <h3>Filter Courses</h3>
         <div class="row g-3" style="margin-top:12px;">
+
             <div class="col-md-6">
                 <label for="filterName" class="form-label">Course name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
+
             <div class="col-md-6">
                 <label for="filterCode" class="form-label">Course code</label>
                 <input type="text" class="form-control" id="filterCode" />
             </div>
+        
             <div class="col-md-6">
                 <label for="filterFacultyId" class="form-label">Faculty in charge</label>
                 <select class="form-select" id="filterFacultyId">
                     <option value="">Any</option>
                     @{
-                        var Faculties = ViewBag.Faculties as List<Faculty>;
                         if (faculties != null)
                         {
-                            foreach (var f in Faculties)
+                            foreach (var f in faculties)
                             {
                                 <option value="@f.FacultyId">@f.FacultyName</option>
                             }
@@ -251,57 +249,73 @@
                     }
                 </select>
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Lecture Credits (min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterLectureMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Lecture Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterLectureMax" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Practical Credits (min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterPracticalMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Practical Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterPracticalMax" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Internship Credits (min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterInternshipMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Internship Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterInternshipMax" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Capstone Credits(min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterCapstoneMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Capstone Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterCapstoneMax" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Total Credits (min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Total Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMax" />
             </div>
+
             <div class="col-md-12">
                 <label for="filterSummary" class="form-label">Course Summary</label>
                 <input type="text" class="form-control" id="filterSummary" />   
             </div>
-            <div class="col-12" style="margin-top:8px;">
-                <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="applyFilterBtn" type="button" class="btn btn-success">Apply</button>
                 <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
             </div>
+
         </div>
+
     </div>
+
 </div>
+
 
 <!-- Course Details Modal -->
 <div class="modal fade" id="courseDetailsModal" tabindex="-1" aria-hidden="true">
@@ -309,7 +323,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Course Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
@@ -344,71 +357,83 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
 
-        // Khi user ở trong (các) modal nhấn esc để thoát
-        $(document).on("keydown", function(e) {
-            if (e.key === "Escape") {
-                $("#addCourseModal").hide();
-                $("#courseDetailsModal").hide();
-                $("#filterModal").hide();
-            }
-        });
-
-        // Khi user đang trong modal Add Course nhấn Enter để submit
-        $(document).on("keydown", function (e) {
-            if (e.key === "Enter" && $("#addCourseModal").is(":visible")) {
-                $("#addNewCourseBtn").click();
-            }
-        });
-
-        // Khi user chọn một option từ datalist
-        $("#facultyInCharge").on("input change", function () {
-            const inputVal = $(this).val().trim();
-            let selectedFacultyId = "";
-
-            // Duyệt qua tất cả option trong datalist để tìm tên khớp
-            $("#facultyInChargeList option").each(function () {
-                if ($(this).val() === inputVal) {
-                    selectedFacultyId = $(this).data("id");
-                    return false; // break
-                }
-            });
-
-            $("#facultyId").val(selectedFacultyId || ""); // nếu không tìm thấy thì để trống
-        });
-
-        // Trường hợp user xóa hết hoặc nhập tay không khớp → reset facultyId
-        $("#facultyInCharge").on("blur", function () {
-            const val = $(this).val().trim();
-            let found = false;
-            $("#facultyInChargeList option").each(function () {
-                if ($(this).val() === val) {
-                    found = true;
-                    return false;
-                }
-            });
-            if (!found) {
-                $("#facultyId").val("");
-            }
-        });
-
         $(document).ready(function() {
+            // Khi user ở trong (các) modal nhấn esc để thoát
+            $(document).on("keydown", function(e) {
+                if (e.key === "Escape") {
+                    $("#addCourseModal").hide(); // Đóng modal add course khi nhấn esc
+                    $("#courseDetailsModal").hide(); // Đóng modal course details khi nhấn esc
+                    $("#filterModal").hide(); // Đóng modal filter khi nhấn esc
+                }
+            });
 
-            // Hide any traditional pagination if present (we rely on infinite scroll)
-            $(".pagination").hide();
+            // Khi user đang trong modal Add Course nhấn Enter để submit
+            $(document).on("keydown", function (e) {
+                if (e.key === "Enter" && $("#addCourseModal").is(":visible")) {
+                    $("#addNewCourseBtn").click();
+                }
+            });
+
+            // Khi user đang trong modal Filter Modal nhấn Enter để apply
+            $(document).on("keydown", function (e) {
+                if (e.key === "Enter" && $("#applyFilterBtn").is(":visible")) {
+                    $("#applyFilterBtn").click();
+                }
+            });
+
+            // Đóng add course modal
+
+            $('#cancelAddNewCourseBtn').on('click', function (e) {
+                if (e.target === this) {
+                    $('#addCourseModal').hide(); // Đóng modal add course khi nhấn nút Cancel
+                }
+            });
 
             // Filter modal open/close
             $("#filterBtn").on("click", function() {
                 $("#filterModal").css("display", "flex");
             });
             $("#closeFilterModal").on("click", function() {
-                $("#filterModal").hide();
+                $("#filterModal").hide(); // Đóng filter modal
             });
-            // Close when clicking outside content
+            // Close when clicking outside content | Đóng filter modal khi click ngoài nội dung
             $("#filterModal").on("click", function(e) {
                 if (e.target === this) {
                     $(this).hide();
                 }
             });
+
+
+            // Khi người dùng chọn một option từ datalist
+            $("#facultyInCharge").on("input change", function () {
+                const inputVal = $(this).val().trim();
+                let selectedFacultyId = "";
+
+                // Duyệt qua tất cả option trong datalist để tìm tên khớp
+                $("#facultyInChargeList option").each(function () {
+                    if ($(this).val() === inputVal) {
+                        selectedFacultyId = $(this).data("id");
+                        return false; // break
+                    }
+                });
+                $("#facultyId").val(selectedFacultyId || ""); // nếu không tìm thấy thì để trống
+            });
+
+            // Trường hợp người dùng xóa hết hoặc nhập tay không khớp → reset facultyId
+            $("#facultyInCharge").on("blur", function () {
+                const val = $(this).val().trim();
+                let found = false;
+                $("#facultyInChargeList option").each(function () {
+                    if ($(this).val() === val) {
+                        found = true;
+                        return false;
+                    }
+                });
+                if (!found) {
+                    $("#facultyId").val("");
+                }
+            });
+
 
             // Filter handlers
             $("#applyFilterBtn").on("click", function() {
@@ -419,6 +444,7 @@
 
                 // Build filters object only including non-empty values so model binding of nullable types works
                 filters = {};
+
                 if (name) filters.name = name;
                 if (code) filters.code = code;
                 if (facultyId) {
@@ -452,8 +478,7 @@
                 if (totalMax !== "") filters.totalMax = totalMax;
 
                 // Toggle filter indicator (red dot) if any filter is set
-
-                const anyFilter = Object.keys(filters).length > 0;
+                const anyFilter = Object.values(filters).some(value => value.length > 0);
                 if (anyFilter) {
                     $("#filterBtn").addClass("has-active-filters");
                 } else {
@@ -467,17 +492,25 @@
 
             });
 
+            // Nút Clear xóa hết dữ liệu trong các trường của Filter Modal
             $("#clearFilterBtn").on("click", function() {
                 $("#filterName").val("");
                 $("#filterCode").val("");
                 $("#filterFacultyId").val("");
+                $("#filterLectureMin").val("");
+                $("#filterLectureMax").val("");
+                $("#filterPracticalMin").val("");
+                $("#filterPracticalMax").val("");
+                $("#filterInternshipMin").val("");
+                $("#filterInternshipMax").val("");
+                $("#filterCapstoneMin").val("");
+                $("#filterCapstoneMax").val("");
+                $("#filterTotalMin").val("");
+                $("#filterTotalMax").val("");
                 $("#filterSummary").val("");
-                $("#filterLectureMin, #filterLectureMax, #filterPracticalMin, #filterPracticalMax, #filterInternshipMin, #filterInternshipMax, #filterCapstoneMin, #filterCapstoneMax, #filterTotalMin, #filterTotalMax").val("");
-                
                 filters = {};
-                $("#filterBtn").removeClass("has-active-filters");
-                // Reset and load without filters
-                resetAndLoad();
+                $("#filterBtn").removeClass("has-active-filters"); // Xóa luôn cả red dot (cái xuất hiện khi nhất nút Apply Filter)
+                resetAndLoad(); // Tải lại trang
             });
 
             // Xử lý hiện/ẩn Add Course Modal
@@ -512,7 +545,7 @@
 
             // Add new course handler
             $("#addNewCourseBtn").on("click", function () {
-                
+
                 // Gọi hàm cập nhật tổng tín chỉ trước khi gửi
                 updateTotalCredits();
                 // client-side validation
@@ -530,7 +563,7 @@
                 // const totalCredits = parseFloat($("#totalCredits").val() || 0) || 0;
                 const summary = $("#courseSummary").val()?.toString().trim() || "";
 
-                
+
                 if (!courseName) {
                     alert("Course name is required.");
                     return;
@@ -556,7 +589,7 @@
                     courseSummary: summary
                 };
 
-                // disable button while submitting
+                    // disable button while submitting
                 $("#addNewCourseBtn").prop("disabled", true).text("Adding...");
 
                 $.ajax({
@@ -642,8 +675,7 @@
                         $("#detail-course-id").text(c.courseId);
                         $("#detail-course-code").text(c.courseCode);
                         $("#detail-course-name").text(c.courseName);
-                        // now using facultyName returned from server
-                        $("#detail-faculty-id").text(c.facultyName || "Not set yet");
+                        $("#detail-faculty-id").text(c.facultyId);
                         $("#detail-total-credits").text(c.totalCredits);
                         $("#detail-lecture-credits").text(c.lectureCredits);
                         $("#detail-practical-credits").text(c.practicalCredits);
@@ -682,7 +714,8 @@
                         if (data.courses && data.courses.length > 0) {
                             data.courses.forEach(function(c) {
                                 sttCounter++;
-                                let facultyCell = c.facultyName ? c.facultyName : "Not set yet";
+                                let facultyCell = c.facultyName ? c.facultyName : "<em>Not set yet</em>";
+                                let summaryCell = c.courseSummary ? c.courseSummary : "<em>Not set yet</em>";
                                 let row = `
                                     <tr>
                                         <td>
@@ -695,14 +728,14 @@
                                                 ${c.courseCode || "N/A"}
                                             </a>
                                         </td>
-                                        <td>${c.courseName || ""}</td>
+                                        <td>${c.courseName}</td>
                                         <td>${facultyCell}</td>
-                                        <td>${c.totalCredits ?? 0}</td>
-                                        <td>${c.lectureCredits ?? 0}</td>
-                                        <td>${c.practicalCredits?? 0}</td>
-                                        <td>${c.internshipCredits ?? 0}</td>
-                                        <td>${c.capstoneCredits ?? 0}</td>
-                                        <td>${c.courseSummary ?? ""}</td>
+                                        <td>${c.totalCredits}</td>
+                                        <td>${c.lectureCredits}</td>
+                                        <td>${c.practicalCredits}</td>
+                                        <td>${c.internshipCredits}</td>
+                                        <td>${c.capstoneCredits}</td>
+                                        <td>${summaryCell}</td>
                                     </tr>
                                 `;
                                 $("tbody").append(row);
@@ -739,6 +772,111 @@
 
             // Initial check: if first page already rendered, try to auto-fill if not enough content
             autoFillIfNeeded();
+                    // Validation helpers for credit range pairs
+            function parseNullableNumber(selector) {
+                const v = $(selector).val();
+                if (v === "" || v === null || v === undefined) return null;
+                const n = parseFloat(v);
+                return isNaN(n) ? null : n;
+            }
+            function setFieldError($el, message) {
+                $el.addClass("is-invalid");
+                let $fb = $el.next(".invalid-feedback");
+                if (!$fb.length) {
+                    $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
+                }
+                $fb.text(message);
+            }
+            function clearFieldError($el) {
+                $el.removeClass("is-invalid");
+                const $fb = $el.next(".invalid-feedback");
+                if ($fb.length) $fb.remove();
+            }
+            function validateRangePair(minSelector, maxSelector, label) {
+                const $min = $(minSelector), $max = $(maxSelector);
+                clearFieldError($min); clearFieldError($max);
+                const min = parseNullableNumber(minSelector);
+                const max = parseNullableNumber(maxSelector);
+                if (min !== null && max !== null && min > max) {
+                    setFieldError($min, label + " min must be less than or equal to max.");
+                    setFieldError($max, "");
+                    return false;
+                }
+                return true;
+            }
+            // Wire up real-time validation for each pair
+            ["Lecture","Practical","Internship","Capstone","Total"].forEach(function(prefix) {
+                const minSel = "#filter" + prefix + "Min";
+                const maxSel = "#filter" + prefix + "Max";
+                $(minSel + "," + maxSel).on("input change", function() {
+                    validateRangePair(minSel, maxSel, prefix + " credits");
+                });
+            });
+
+            // Replace / augment apply handler: validate before building filters
+            // (If your file already defines this handler, replace that block with the one below.)
+            $("#applyFilterBtn").off("click").on("click", function() {
+                // Validate all pairs first
+                const pairsValid =
+                    validateRangePair("#filterLectureMin", "#filterLectureMax", "Lecture")
+                    & validateRangePair("#filterPracticalMin", "#filterPracticalMax", "Practical")
+                    & validateRangePair("#filterInternshipMin", "#filterInternshipMax", "Internship")
+                    & validateRangePair("#filterCapstoneMin", "#filterCapstoneMax", "Capstone")
+                    & validateRangePair("#filterTotalMin", "#filterTotalMax", "Total");
+                if (!pairsValid) {
+                    // Focus first invalid input
+                    const $firstInvalid = $(".is-invalid").first();
+                    if ($firstInvalid.length) $firstInvalid.focus();
+                    return; // stop - do not apply filters
+                }
+
+                // Existing filter build logic (unchanged)
+                const name = $("#filterName").val()?.toString().trim();
+                const code = $("#filterCode").val()?.toString().trim();
+                const facultyId = $("#filterFacultyId").val();
+                const summary = $("#filterSummary").val()?.toString().trim();
+
+                filters = {};
+                if (name) filters.name = name;
+                if (code) filters.code = code;
+                if (facultyId) { if (facultyId !== "") filters.facultyId = facultyId; }
+                if (summary) filters.summary = summary;
+
+                const lectureMin = $("#filterLectureMin").val();
+                const lectureMax = $("#filterLectureMax").val();
+                if (lectureMin !== "") filters.lectureMin = lectureMin;
+                if (lectureMax !== "") filters.lectureMax = lectureMax;
+
+                const practicalMin = $("#filterPracticalMin").val();
+                const practicalMax = $("#filterPracticalMax").val();
+                if (practicalMin !== "") filters.practicalMin = practicalMin;
+                if (practicalMax !== "") filters.practicalMax = practicalMax;
+
+                const internshipMin = $("#filterInternshipMin").val();
+                const internshipMax = $("#filterInternshipMax").val();
+                if (internshipMin !== "") filters.internshipMin = internshipMin;
+                if (internshipMax !== "") filters.internshipMax = internshipMax;
+
+                const capstoneMin = $("#filterCapstoneMin").val();
+                const capstoneMax = $("#filterCapstoneMax").val();
+                if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
+                if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
+
+                const totalMin = $("#filterTotalMin").val();
+                const totalMax = $("#filterTotalMax").val();
+                if (totalMin !== "") filters.totalMin = totalMin;
+                if (totalMax !== "") filters.totalMax = totalMax;
+
+                const anyFilter = Object.keys(filters).length > 0;
+                if (anyFilter) $("#filterBtn").addClass("has-active-filters"); else $("#filterBtn").removeClass("has-active-filters");
+
+                $("#filterModal").hide();
+                resetAndLoad();
+            });
         });
+
+
     </script>
+
 }
+    
