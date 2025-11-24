@@ -22,8 +22,9 @@ namespace SIMS.Models
         [Column("faculty_in_charge")]
         public int? FacultyId { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("total_credits")]
-        public decimal? TotalCredits { get; private set; }
+        public decimal? TotalCredits { get; set; }
 
         [Column("lecture_credits")]
         public decimal? LectureCredits { get; set; }

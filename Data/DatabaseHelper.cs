@@ -327,13 +327,15 @@ namespace SIMS.Data
 
         public IQueryable<Course> GetCourses()
         {
-            return _context.Courses;
+            // Ensure Faculty navigation is available to callers so views / APIs can use Faculty.FacultyName
+            return _context.Courses.Include(c => c.Faculty);
         }
 
         public Course GetCourseById(int courseId)
         {
             return _context.Courses
                 .AsNoTracking()
+                .Include(c => c.Faculty)
                 .FirstOrDefault(c => c.CourseId == courseId) ?? new Course();
         }
 
