@@ -116,9 +116,13 @@ namespace SIMS.Controllers
             int page = 1,
             string? name = null,
             string? code = null,
-            string? type = null,
-            int? programId = null,
-            int? semester = null)
+            int? facultyId = null,
+            decimal? lectureMin = null, decimal? lectureMax = null,
+            decimal? practicalMin = null, decimal? practicalMax = null,
+            decimal? internshipMin = null, decimal? internshipMax = null,
+            decimal? capstoneMin = null, decimal? capstoneMax = null,
+            decimal? totalMin = null, decimal? totalMax = null,
+            string? summary = null)
         {
             int pageSize = 10;
             var query = _db.GetCourses(); // IQueryable<Course> (includes Faculty)
@@ -142,16 +146,85 @@ namespace SIMS.Controllers
                 query = query.Where(c => (c.CourseCode ?? string.Empty).Contains(term));
             }
 
-            if (!string.IsNullOrWhiteSpace(type))
+            if (facultyId.HasValue)
             {
-                // Course doesn't have a dedicated "type" property in the current model.
-                // Best-effort: match against CourseSummary and CourseName.
-                var term = type.Trim();
+                query = query.Where(c => c.FacultyId == facultyId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(summary))
+            {
+                var term = summary.Trim();
                 query = query.Where(c =>
-                    ((c.CourseSummary ?? string.Empty).Contains(term)) ||
-                    ((c.CourseName ?? string.Empty).Contains(term))
+                    (c.CourseSummary ?? string.Empty).Contains(term) ||
+                    (c.CourseName ?? string.Empty).Contains(term)
                 );
             }
+
+            // Credit range filters. Use null-coalescing arithmetic so EF Core can translate
+
+            if (lectureMin.HasValue)
+            {
+                query = query.Where(c => (c.LectureCredits ?? 0m) >= lectureMin.Value);
+            }
+
+            if (lectureMax.HasValue)
+            {
+                query = query.Where(c => (c.LectureCredits ?? 0m) <= lectureMax.Value);
+            }
+
+            if (practicalMin.HasValue)
+            {
+                query = query.Where(c => (c.PracticalCredits ?? 0m) >= practicalMin.Value);
+            }
+
+            if (practicalMax.HasValue)
+            {
+                query = query.Where(c => (c.PracticalCredits ?? 0m) <= practicalMax.Value);
+            }
+
+            if (internshipMin.HasValue)
+            {
+                query = query.Where(c => (c.InternshipCredits ?? 0m) >= internshipMin.Value);
+            }
+
+            if (internshipMax.HasValue)
+            {
+                query = query.Where(c => (c.InternshipCredits ?? 0m) <= internshipMax.Value);
+            }
+
+            if (capstoneMin.HasValue)
+            {
+                query = query.Where(c => (c.CapstoneCredits ?? 0m) >= capstoneMin.Value);
+            }
+
+            if (capstoneMax.HasValue)
+            {
+                query = query.Where(c => (c.CapstoneCredits ?? 0m) <= capstoneMax.Value);
+            }
+
+            // Total credits computed from components
+            // Note: EF Core can translate arithmetic of nullable columns when using ?? 0m
+            if (totalMin.HasValue)
+            {
+                query = query.Where(c =>
+                    ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)) >= totalMin.Value);
+            }
+            if (totalMax.HasValue)
+            {
+                query = query.Where(c =>
+                    ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)) <= totalMax.Value);
+            }
+
+            //if (!string.IsNullOrWhiteSpace(type))
+            //{
+            //    // Course doesn't have a dedicated "type" property in the current model.
+            //    // Best-effort: match against CourseSummary and CourseName.
+            //    var term = type.Trim();
+            //    query = query.Where(c =>
+            //        ((c.CourseSummary ?? string.Empty).Contains(term)) ||
+            //        ((c.CourseName ?? string.Empty).Contains(term))
+            //    );
+            //}
 
             // programId and semester are accepted but not applied because Course model has no ProgramId/Semester columns.
             // Keep parameters to preserve client contract and for future extension.
@@ -188,14 +261,14 @@ namespace SIMS.Controllers
                 currentPage = page,
                 totalPages = totalPages,
                 totalItems = totalItems,
-                appliedFilters = new
-                {
-                    name = name,
-                    code = code,
-                    type = type,
-                    programId = programId,
-                    semester = semester
-                }
+                //appliedFilters = new
+                //{
+                //    name = name,
+                //    code = code,
+                //    type = type,
+                //    programId = programId,
+                //    semester = semester
+                //}
             });
         }
 
@@ -233,7 +306,7 @@ namespace SIMS.Controllers
         //    if (!string.IsNullOrWhiteSpace(code))
         //    {
         //        var term = code.Trim();
-        //        ququery.Where(c => (c.CourseCode ?? string.Empty).Contains(term));
+        //        quẻquery.Where(c => (c.CourseCode ?? string.Empty).Contains(term));
         //    }
 
         //    if (facultyId.HasValue)
