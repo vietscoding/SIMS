@@ -61,14 +61,6 @@
                         }
                     }
                     
-                    @* <td>@(c.Faculty?.FacultyName ?? (c.FacultyId?.ToString() ?? "N/A"))</td> *@
-                    @* <td>
-                        @(
-                            c.TotalCredits.HasValue
-                                ? c.TotalCredits.Value.ToString()
-                                : ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)).ToString()
-                        )
-                    </td> *@
                     @{
 
                         decimal? totalCredits = c.LectureCredits + c.PracticalCredits + c.CapstoneCredits;
