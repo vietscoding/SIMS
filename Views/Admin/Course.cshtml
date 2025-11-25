@@ -441,6 +441,28 @@
     <script>
 
         $(document).ready(function() {
+            // Add a small style for label warning (yellow)
+            if (!$('head').find('#update-label-warning-style').length) {
+                $('<style id="update-label-warning-style"> .label-warning { color: #b58900 !important; font-weight: 600; } </style>').appendTo('head');
+            }
+
+            // Helper: change label color to warning and optionally set field-level invalid feedback
+            function markUpdateFieldWarning(fieldId, message) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.addClass('label-warning');
+                if (message) {
+                    setFieldError($input, message);
+                }
+            }
+            function clearUpdateFieldWarning(fieldId) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.removeClass('label-warning');
+                clearFieldError($input);
+            }
+
+            // --- existing handlers kept (escape, modals, add-course handlers, filters etc) ---
             // Khi user ở trong (các) modal nhấn esc để thoát
             $(document).on("keydown", function(e) {
                 if (e.key === "Escape") {
@@ -633,8 +655,7 @@
             });
             
 
-
-            // Update total credits whenever credit fields change
+            // Update total credits whenever credit fields change (Add modal)
             function updateTotalCredits() {
                 const lecture = parseFloat($("#lectureCredits").val() || 0) || 0;
                 const practical = parseFloat($("#practicalCredits").val() || 0) || 0;
@@ -765,19 +786,65 @@
             Lấy giá trị của các trường bị thay đổi
             So sánh: Nếu khác -> Bật nút Update; Nếu giống ---> Tắt nút Update
             */
-           
-            // let currentCourseName = null;
-            // let currentTenHocPhan = null;
-            // let currentCourseCode = null;
-            // let currentFacultyInCharge = null;
-            // let currentLectureCredits = null;
-            // let currentPracticalCredits = null;
-            // let currentInternshipCredits = null;
-            // let currentCapstoneCredits = null
-            // let currentCourseSummary = null;
-            
 
-            $('#updateCourseModal input').on('input change', function() {
+            // Update total credits for update modal
+            function updateUpdateTotalCredits() {
+                const lecture = parseFloat($("#updateLectureCredits").val() || 0) || 0;
+                const practical = parseFloat($("#updatePracticalCredits").val() || 0) || 0;
+                const internship = parseFloat($("#updateInternshipCredits").val() || 0) || 0;
+                const capstone = parseFloat($("#updateCapstoneCredits").val() || 0) || 0;
+                const total = lecture + practical + capstone;
+                $("#updateTotalCredits").val(total);
+            }
+            $("#updateLectureCredits, #updatePracticalCredits, #updateInternshipCredits, #updateCapstoneCredits").on("input change", updateUpdateTotalCredits);
+
+            // Validate update modal fields; show yellow label and invalid feedback for problems
+            function validateUpdateModalFields() {
+                // clear previous warnings
+                const fields = ['updateCourseCode','updateCourseName','updateLectureCredits','updatePracticalCredits','updateInternshipCredits','updateCapstoneCredits'];
+                fields.forEach(f => clearUpdateFieldWarning(f));
+
+                let valid = true;
+
+                const courseName = $('#updateCourseName').val()?.toString().trim() || '';
+                const courseCode = $('#updateCourseCode').val()?.toString().trim() || '';
+                const lecture = parseFloat($('#updateLectureCredits').val() || 0) || 0;
+                const practical = parseFloat($('#updatePracticalCredits').val() || 0) || 0;
+                const internship = parseFloat($('#updateInternshipCredits').val() || 0) || 0;
+                const capstone = parseFloat($('#updateCapstoneCredits').val() || 0) || 0;
+
+                if (!courseName) {
+                    markUpdateFieldWarning('updateCourseName', 'Course name is required.');
+                    valid = false;
+                }
+
+                if (!/^\d{7}$/.test(courseCode)) {
+                    markUpdateFieldWarning('updateCourseCode', 'Course code must be exactly 7 digits.');
+                    valid = false;
+                }
+
+                if (lecture < 0) {
+                    markUpdateFieldWarning('updateLectureCredits', 'Lecture credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (practical < 0) {
+                    markUpdateFieldWarning('updatePracticalCredits', 'Practical credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (internship < 0) {
+                    markUpdateFieldWarning('updateInternshipCredits', 'Internship credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (capstone < 0) {
+                    markUpdateFieldWarning('updateCapstoneCredits', 'Capstone credits must be 0 or positive.');
+                    valid = false;
+                }
+
+                return valid;
+            }
+
+            // Replace earlier change-detection: combine change detection + validation to enable Update button
+            $('#updateCourseModal input').off('input change').on('input change', function() {
                 const originalValues = {
                     courseName: $('#updateCourseName').data('original') || '',
                     tenHocPhan: $('#updateTenHocPhan').data('original') || '',
@@ -807,10 +874,15 @@
                         break;
                     }
                 }
-                updateCourseBtn.disabled = !isChanged;
+
+                // Validate fields and update UI accordingly
+                const valid = validateUpdateModalFields();
+
+                // Enable Update only if there is a change and the fields are valid
+                updateCourseBtn.disabled = !(isChanged && valid);
             });
 
-            // Update Course handler
+            // Update Course Modal handler - Load course data via AJAX into the Update Course Modal
             $(document).on("click", ".view-details", function (e) {
                 e.preventDefault();
                 const id = $(this).data("id");
@@ -844,6 +916,22 @@
                         $("#updateInternshipCredits").val(c.internshipCredits);
                         $("#updateCapstoneCredits").val(c.capstoneCredits);
                         $("#updateCourseSummary").val(c.courseSummary);
+
+                        // set data-original attributes for change detection
+                        $('#updateCourseCode').data('original', c.courseCode || '');
+                        $('#updateCourseName').data('original', c.courseName || '');
+                        $('#updateTenHocPhan').data('original', c.tenHocPhan || '');
+                        $('#updateFacultyInCharge').data('original', c.facultyName || '');
+                        $('#updateLectureCredits').data('original', (c.lectureCredits ?? 0).toString());
+                        $('#updatePracticalCredits').data('original', (c.practicalCredits ?? 0).toString());
+                        $('#updateInternshipCredits').data('original', (c.internshipCredits ?? 0).toString());
+                        $('#updateCapstoneCredits').data('original', (c.capstoneCredits ?? 0).toString());
+                        $('#updateCourseSummary').data('original', c.courseSummary || '');
+
+                        // clear any previous warnings / errors when modal opens
+                        ['updateCourseCode','updateCourseName','updateLectureCredits','updatePracticalCredits','updateInternshipCredits','updateCapstoneCredits'].forEach(f => clearUpdateFieldWarning(f));
+                        // ensure update button is disabled initially
+                        updateCourseBtn.disabled = true;
                     },
                     error: function () {
                         // $("#course-details-loading").text("Failed to load data.");
@@ -851,6 +939,7 @@
                     }
                 });
             });
+
 
 
             // Load more courses function
