@@ -10,7 +10,6 @@
     <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh; margin-right:1vh">Filter</button>
     <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-bottom: 1vh; margin-right:1vh">Add</button>
     <button id="editCourseBtn" type="button" class="btn btn-warning" style="margin-bottom: 1vh; margin-right:1vh">Edit</button>
-    <button id="deleteCourseBtn" type="button" class="btn btn-danger" style="margin-bottom: 1vh; margin-right:1vh">Delete</button>
 </div>
 
 <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
@@ -953,6 +952,42 @@
                     }
                 });
             });
+
+            // Delete Handler
+            $('#deleteCourseBtn').on('click', function () {
+                const courseId = $('#updateCourseId').val();
+                
+                if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                    return;
+                }
+                // disable delete button during operation
+                $('#deleteCourseBtn').prop('disabled', true).text('Deleting...');
+                $.ajax({
+                    url: '/Admin/DeleteCourse',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(courseId),
+                    success: function (res) {
+                        if (res && res.success) {
+                            alert(res.message || 'Course deleted successfully.');
+                            $('#updateCourseModal').hide();
+                            resetAndLoad();
+                        } else {
+                            const msg = (res && res.message) ? res.message : 'Failed to delete course.';
+                            alert(msg);
+                        }
+                    },
+                    error: function () {
+                        alert('Failed to delete course due to server error. Please try again later.');
+                    },
+                    complete: function () {
+                        $('#deleteCourseBtn').prop('disabled', false).text('Delete');
+                    }
+                });
+            });
+
+            // Delete confirmation before proceeding
+            
 
             // NEW: Update button handler (sends data to server; handles server-side validation feedback)
             $('#updateCourseBtn').on('click', function () {

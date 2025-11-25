@@ -115,6 +115,29 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
+        public IActionResult DeleteCourse([FromBody] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid course ID." });
+            }
+            var existingCourse = _db.GetCourseById(id);
+            if (existingCourse == null)
+            {
+                return NotFound(new { success = false, message = "Course not found." });
+            }
+            var deleted = _db.RemoveCourse(id);
+            if (!deleted)
+            {
+                return StatusCode(500, new { message = "Failed to delete course. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Course deleted successfully." });
+            }
+        }
+
+        [HttpPost]
         public IActionResult UpdateCourse([FromBody] Course course)
         {
             if (course == null || course.CourseId <= 0)
