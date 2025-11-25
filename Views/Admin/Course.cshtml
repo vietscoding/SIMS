@@ -436,6 +436,11 @@
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/common-modals.js"></script>
+    <script src="~/js/modal-function-handlers.js"></script>
+    <script src="~/js/reload-tables-handlers.js"></script>
+    <script src="~/js/clear-data-fields-in-filter-modal-handlers.js"></script>
+    <script src="~/js/data-filter-handlers.js"></script>
     <script>
 
         $(document).ready(function() {
@@ -475,70 +480,8 @@
             }
 
             // --- existing handlers kept (escape, modals, add-course handlers, filters etc) ---
-            // Khi user ở trong (các) modal nhấn esc để thoát
-            $(document).on("keydown", function(e) {
-                if (e.key === "Escape") {
-                    $("#addCourseModal").hide(); // Đóng modal add course khi nhấn esc
-                    $("#courseDetailsModal").hide(); // Đóng modal course details khi nhấn esc
-                    $("#filterModal").hide(); // Đóng modal filter khi nhấn esc
-                    $("#updateCourseModal").hide(); // Đóng modal filter khi nhấn esc
-                }
-            });
 
-            // Khi user đang trong modal Add Course nhấn Enter để submit
-            $(document).on("keydown", function (e) {
-                if (e.key === "Enter" && $("#addCourseModal").is(":visible")) {
-                    $("#addNewCourseBtn").click();
-                }
-            });
 
-            // Khi user đang trong modal Filter Modal nhấn Enter để apply
-            $(document).on("keydown", function (e) {
-                if (e.key === "Enter" && $("#applyFilterBtn").is(":visible")) {
-                    $("#applyFilterBtn").click();
-                }
-            });
-
-            // Đóng add course modal khi user nhấn nút cancel
-
-            $('#cancelAddNewCourseBtn').on('click', function (e) {
-                if (e.target === this) {
-                    $('#addCourseModal').hide(); // Đóng modal add course khi nhấn nút Cancel
-                }
-            });
-            
-            // Đóng update course modal khi user nhấn nút cancel
-            $('#cancelUpdateCourseBtn').on('click', function (e) {
-                if (e.target === this) {
-                    $('#updateCourseModal').hide(); // Đóng modal update course khi nhấn nút Cancel
-                }
-            });
-
-            // Update course modal open/close
-            
-            $("#closeUpdateCourseModal").on("click", function() {
-                $("#updateCourseModal").hide(); // Đóng filter modal
-            });
-            // Close when clicking outside content | Đóng filter modal khi click ngoài nội dung
-            $("#updateCourseModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
-                }
-            });
-
-            // Filter course modal open/close
-            $("#filterBtn").on("click", function() {
-                $("#filterModal").css("display", "flex");
-            });
-            $("#closeFilterModal").on("click", function() {
-                $("#filterModal").hide(); // Đóng filter modal
-            });
-            // Close when clicking outside content | Đóng filter modal khi click ngoài nội dung
-            $("#filterModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
-                }
-            });
 
 
             // Khi người dùng chọn một option từ datalist
@@ -572,99 +515,8 @@
             });
 
 
-            // Filter handlers
-            $("#applyFilterBtn").on("click", function() {
-                const name = $("#filterName").val()?.toString().trim();
-                const code = $("#filterCode").val()?.toString().trim();
-                const facultyId = $("#filterFacultyId").val();
-                const summary = $("#filterSummary").val()?.toString().trim();
 
-                // Build filters object only including non-empty values so model binding of nullable types works
-                filters = {};
 
-                if (name) filters.name = name;
-                if (code) filters.code = code;
-                if (facultyId) {
-                    if (facultyId !== "") filters.facultyId = facultyId;
-                }
-                if (summary) filters.summary = summary;
-
-                const lectureMin = $("#filterLectureMin").val();
-                const lectureMax = $("#filterLectureMax").val();
-                if (lectureMin !== "") filters.lectureMin = lectureMin;
-                if (lectureMax !== "") filters.lectureMax = lectureMax;
-
-                const practicalMin = $("#filterPracticalMin").val();
-                const practicalMax = $("#filterPracticalMax").val();
-                if (practicalMin !== "") filters.practicalMin = practicalMin;
-                if (practicalMax !== "") filters.practicalMax = practicalMax;
-
-                const internshipMin = $("#filterInternshipMin").val();
-                const internshipMax = $("#filterInternshipMax").val();
-                if (internshipMin !== "") filters.internshipMin = internshipMin;
-                if (internshipMax !== "") filters.internshipMax = internshipMax;
-
-                const capstoneMin = $("#filterCapstoneMin").val();
-                const capstoneMax = $("#filterCapstoneMax").val();
-                if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
-                if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
-
-                const totalMin = $("#filterTotalMin").val();
-                const totalMax = $("#filterTotalMax").val();
-                if (totalMin !== "") filters.totalMin = totalMin;
-                if (totalMax !== "") filters.totalMax = totalMax;
-
-                // Toggle filter indicator (red dot) if any filter is set
-                const anyFilter = Object.values(filters).some(value => value.length > 0);
-                if (anyFilter) {
-                    $("#filterBtn").addClass("has-active-filters");
-                } else {
-                    $("#filterBtn").removeClass("has-active-filters");
-                }
-
-                $("#filterModal").hide();
-
-                // Reset and load with new filters
-                resetAndLoad();
-
-            });
-
-            // Nút Clear xóa hết dữ liệu trong các trường của Filter Modal
-            $("#clearFilterBtn").on("click", function() {
-                $("#filterName").val("");
-                $("#filterCode").val("");
-                $("#filterFacultyId").val("");
-                $("#filterLectureMin").val("");
-                $("#filterLectureMax").val("");
-                $("#filterPracticalMin").val("");
-                $("#filterPracticalMax").val("");
-                $("#filterInternshipMin").val("");
-                $("#filterInternshipMax").val("");
-                $("#filterCapstoneMin").val("");
-                $("#filterCapstoneMax").val("");
-                $("#filterTotalMin").val("");
-                $("#filterTotalMax").val("");
-                $("#filterSummary").val("");
-                filters = {};
-                $("#filterBtn").removeClass("has-active-filters"); // Xóa luôn cả red dot (cái xuất hiện khi nhất nút Apply Filter)
-                resetAndLoad(); // Tải lại trang
-            });
-
-            // Xử lý hiện/ẩn Add Course Modal
-            $("#addCourseBtn").on("click", function() {
-                $("#addCourseModal").css("display", "flex");
-            });
-            $("#closeAddCourseModal").on("click", function() {
-                $("#addCourseModal").hide();
-            });
-            $("#cancelAddCourseBtn").on("click", function() {
-                $("#addCourseModal").hide();
-            });
-            $("#addCourseModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
-                }
-            });
             
 
             // Update total credits whenever credit fields change (Add modal)
@@ -777,14 +629,6 @@
                 }
             }
 
-            // Function to reset table and reload data
-            function resetAndLoad() {
-                $("tbody").empty();
-                sttCounter = 0;
-                currentPage = 0;
-                totalPages = 1; // Reset to trigger load
-                loadMoreCourses();
-            }
 
             // Course details handler
 
