@@ -314,24 +314,12 @@
         <span class="close-modal" id="closeUpdateCourseModal">&times;</span>
         <h3>Update Course</h3>
         <div class="row g-3" style="margin-top:12px;">
-            <div class="col-md-2">
+            <div class="col-md-6">
                 <label for="updateCourseId" class="form-label">Course Id</label>
                 <input type="text"
                         class="form-control"
                         id="updateCourseId" 
                         readonly />
-            </div>
-            <div class="col-md-5">
-                <label for="updateCourseName" class="form-label">Course Name</label>
-                <input type="text"
-                        class="form-control"
-                        id="updateCourseName" />
-            </div>
-            <div class="col-md-5">
-                <label for="updateTenHocPhan" class="form-label">Tên Học Phần</label>
-                <input type="text"
-                        class="form-control"
-                        id="updateTenHocPhan" />
             </div>
 
             <div class="col-md-6">
@@ -342,8 +330,20 @@
                         maxlength="7"
                         pattern="[0-9]{7}" />
             </div>
-
             <div class="col-md-6">
+                <label for="updateCourseName" class="form-label">Course Name</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateCourseName" />
+            </div>
+            <div class="col-md-6">
+                <label for="updateTenHocPhan" class="form-label">Tên Học Phần</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateTenHocPhan" />
+            </div>
+
+            <div class="col-md-12">
                 <label for="updateFacultyInCharge" class="form-label">Faculty in charge</label>
                 <input type="text"
                         class="form-control"
