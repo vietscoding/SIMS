@@ -69,7 +69,7 @@ $("#addCourseBtn").on("click", function () {
 $("#closeAddCourseModal").on("click", function () {
     $("#addCourseModal").hide();
 });
-$("#cancelAddCourseBtn").on("click", function () {
+$("#cancelAddNewCourseBtn").on("click", function () {
     $("#addCourseModal").hide();
 });
 $("#addCourseModal").on("click", function (e) {

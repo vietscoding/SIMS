@@ -534,22 +534,6 @@
                 $("#filterBtn").removeClass("has-active-filters"); // Xóa luôn cả red dot (cái xuất hiện khi nhất nút Apply Filter)
                 resetAndLoad(); // Tải lại trang
             });
-
-            // Xử lý hiện/ẩn Add Course Modal
-            $("#addCourseBtn").on("click", function() {
-                $("#addCourseModal").css("display", "flex");
-            });
-            $("#closeAddCourseModal").on("click", function() {
-                $("#addCourseModal").hide();
-            });
-            $("#cancelAddCourseBtn").on("click", function() {
-                $("#addCourseModal").hide();
-            });
-            $("#addCourseModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
-                }
-            });
             
 
             // Update total credits whenever credit fields change (Add modal)
