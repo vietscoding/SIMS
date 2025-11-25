@@ -7,9 +7,8 @@
 <h2>Courses List</h2>
 <div class="actionBtnBox">
     <form></form>
-    <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh; margin-right:1vh">Filter</button>
-    <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-bottom: 1vh; margin-right:1vh">Add</button>
-    <button id="editCourseBtn" type="button" class="btn btn-warning" style="margin-bottom: 1vh; margin-right:1vh">Edit</button>
+    <button id="filterBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh; margin-right:1vh">Filter Courses</button>
+    <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-bottom: 1vh; margin-right:1vh">Add a New Course</button>
 </div>
 
 <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
@@ -296,7 +295,7 @@
             </div>
 
             <div class="col-12" style="margin-top:20px;">
-                <button id="applyFilterBtn" type="button" class="btn btn-success">Apply</button>
+                <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
                 <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
             </div>
 
@@ -910,7 +909,7 @@
                     success: function (c) {
                         currentCourseCode = c.courseCode;
                         currentCourseName = c.courseName;
-                        currentTenHocPhan = c.courseName;
+                        currentTenHocPhan = c.tenHocPhan;
                         currentFacultyInCharge = c.facultyName;
                         currentLectureCredits = c.lectureCredits;
                         currentPracticalCredits = c.practicalCredits;
@@ -921,7 +920,7 @@
                         $("#updateCourseId").val(c.courseId);
                         $("#updateCourseCode").val(c.courseCode);
                         $("#updateCourseName").val(c.courseName);
-                        $("#updateTenHocPhan").val(c.courseName);
+                        $("#updateTenHocPhan").val(c.tenHocPhan);
                         $("#updateFacultyInCharge").val(c.facultyName);
                         $("#updateTotalCredits").val(c.totalCredits);
                         $("#updateLectureCredits").val(c.lectureCredits);
