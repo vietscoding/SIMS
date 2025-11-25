@@ -251,7 +251,16 @@ namespace SIMS.Data
                 return false;
             }
             existingCourse.CourseName = course.CourseName;
-            
+            existingCourse.CourseCode = course.CourseCode;
+            existingCourse.TenHocPhan = course.TenHocPhan;
+            existingCourse.FacultyId = course.FacultyId;
+            existingCourse.LectureCredits = course.LectureCredits;
+            existingCourse.PracticalCredits = course.PracticalCredits;
+            existingCourse.InternshipCredits = course.InternshipCredits;
+            existingCourse.CapstoneCredits = course.CapstoneCredits;
+            existingCourse.CourseSummary = course.CourseSummary;
+
+
             _context.SaveChanges();
             return true;
         }

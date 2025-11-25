@@ -110,9 +110,49 @@ namespace SIMS.Controllers
                 practicalCredits = course.PracticalCredits,
                 internshipCredits = course.InternshipCredits,
                 capstoneCredits = course.CapstoneCredits,
-                summary = course.CourseSummary
+                courseSummary = course.CourseSummary
             });
         }
+
+        [HttpPost]
+        public IActionResult UpdateCourse([FromBody] Course course)
+        {
+            if (course == null || course.CourseId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid course data." });
+            }
+            var existingCourse = _db.GetCourseById(course.CourseId);
+            if (existingCourse == null)
+            {
+                return NotFound(new { success = false, message = "Course not found." });
+            }
+            Faculty existingFaculty = _db.GetFacultyById(course.FacultyId ?? 0);
+            if (existingFaculty == null)
+            {
+                return BadRequest(new { success = false, message = "Specified faculty does not exist." });
+            }
+
+            // Update fields
+            existingCourse.CourseName = course.CourseName?.Trim();
+            existingCourse.TenHocPhan = course.TenHocPhan?.Trim();
+            existingCourse.CourseCode = course.CourseCode?.Trim();
+            existingCourse.FacultyId = course.FacultyId;
+            existingCourse.LectureCredits = course.LectureCredits;
+            existingCourse.PracticalCredits = course.PracticalCredits;
+            existingCourse.InternshipCredits = course.InternshipCredits;
+            existingCourse.CapstoneCredits = course.CapstoneCredits;
+            existingCourse.CourseSummary = course.CourseSummary?.Trim();
+            var updated = _db.UpdateCourse(existingCourse);
+            if (!updated)
+            {
+                return StatusCode(500, new { message = "Failed to update course. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Course updated successfully." });
+            }
+        }
+
 
         // Server-side filtered paging for infinite scroll
         [HttpGet]

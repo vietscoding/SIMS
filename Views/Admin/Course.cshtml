@@ -419,13 +419,13 @@
                 <label for="updateCourseSummary" class="form-label">Course Summary</label>
                 <input type="text"
                         class="form-control"
-                        id="updateCourseSummary"
-                        placeholder="A meaningful description about this course..." />
+                        id="updateCourseSummary" />
             </div>
 
-            <div class="col-12" style="margin-top:20px;">
+            <div class="col-12" style="margin-top:20px; ">
                 <button id="updateCourseBtn" type="button" class="btn btn-success" disabled>Update</button>
-                <button id="cancelUpdateCourseBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+                <button id="deleteCourseBtn" type="button" class="btn btn-danger">Delete</button>
+                <button id="cancelUpdateCourseBtn" type="button" class="btn btn-outline-secondary">Cancel</button>
             </div>
         </div>
             
@@ -460,6 +460,20 @@
                 const $label = $('label[for="' + fieldId + '"]');
                 $label.removeClass('label-warning');
                 clearFieldError($input);
+            }
+
+            // Utility: get faculty id for update modal from datalist
+            function getFacultyIdFromUpdate() {
+                const val = $('#updateFacultyInCharge').val()?.toString().trim() || '';
+                if (!val) return null;
+                let selected = null;
+                $('#facultyInChargeList option').each(function () {
+                    if ($(this).val() === val) {
+                        selected = $(this).data('id') || null;
+                        return false;
+                    }
+                });
+                return selected;
             }
 
             // --- existing handlers kept (escape, modals, add-course handlers, filters etc) ---
@@ -882,7 +896,7 @@
                 updateCourseBtn.disabled = !(isChanged && valid);
             });
 
-            // Update Course Modal handler - Load course data via AJAX into the Update Course Modal
+            // Update Course Modal handler (open) - Load course data via AJAX into the Update Course Modal
             $(document).on("click", ".view-details", function (e) {
                 e.preventDefault();
                 const id = $(this).data("id");
@@ -940,6 +954,150 @@
                 });
             });
 
+            // NEW: Update button handler (sends data to server; handles server-side validation feedback)
+            $('#updateCourseBtn').on('click', function () {
+                // Clear previous warning
+                const trackedFields = ['updateCourseCode',
+                                       'updateCourseName',
+                                       'updateTenHocPhan',
+                                       'updateLectureCredits',
+                                       'updatePracticalCredits',
+                                       'updateInternshipCredits',
+                                       'updateCapstoneCredits'];
+                trackedFields.forEach(f => clearUpdateFieldWarning(f));
+
+
+                // disable button during submit
+                $('#updateCourseBtn').prop('disabled', true).text('Updating...');
+
+                // gather inputs
+                const payload = {
+                    courseId: $('#updateCourseId').val(),
+                    courseCode: $('#updateCourseCode').val()?.toString().trim() || '',
+                    courseName: $('#updateCourseName').val()?.toString().trim() || '',
+                    tenHocPhan: $('#updateTenHocPhan').val()?.toString().trim() || '',
+                    facultyId: getFacultyIdFromUpdate(),
+                    lectureCredits: parseFloat($('#updateLectureCredits').val() || 0) || 0,
+                    practicalCredits: parseFloat($('#updatePracticalCredits').val() || 0) || 0,
+                    internshipCredits: parseFloat($('#updateInternshipCredits').val() || 0) || 0,
+                    capstoneCredits: parseFloat($('#updateCapstoneCredits').val() || 0) || 0,
+                    courseSummary: $('#updateCourseSummary').val()?.toString().trim() || ''
+                };
+
+                // Minimal client-side safe-check before sending to server
+                if (!payload.courseName) {
+                    markUpdateFieldWarning('updateCourseName', 'Course name is required.');
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+                if (!/^\d{7}$/.test(payload.courseCode)) {
+                    markUpdateFieldWarning('updateCourseCode', 'Course code must be exactly 7 digits.');
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+                // do not allow negative credits client-side
+                if (payload.lectureCredits < 0 || payload.practicalCredits < 0 || payload.internshipCredits < 0 || payload.capstoneCredits < 0) {
+                    if (payload.lectureCredits < 0) markUpdateFieldWarning('updateLectureCredits', "The credits can't be negative.");
+                    if (payload.practicalCredits < 0) markUpdateFieldWarning('updatePracticalCredits', "The credits can't be negative.");
+                    if (payload.internshipCredits < 0) markUpdateFieldWarning('updateInternshipCredits', "The credits can't be negative.");
+                    if (payload.capstoneCredits < 0) markUpdateFieldWarning('updateCapstoneCredits', "The credits can't be negative.");
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+
+                // Send to the server for authoritative validation + update
+                $.ajax({
+                    url: '/Admin/UpdateCourse',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        // Expected shape:
+                        // { sucess: true, message: "Updated"}
+                        // OR { success: false, message: "Validation failed", errors: { fieldName: "error message" ,...} }
+
+                        if (res && res.success) {
+                            alert(res.message || 'Course updated successfully.');
+                            $('#updateCourseModal').hide();
+                            resetAndLoad();
+                        } else {
+                            // handle structured validation errors if present
+                            const errors = (res && res.errors) ? res.errors : null;
+                            if (errors && typeof errors === 'object') {
+                                // map potential server field names to input ids
+                                const map = {
+                                    courseName: 'updateCourseName',
+                                    courseCode: 'updateCourseCode',
+                                    tenHocPhan: 'updateTenHocPhan',
+                                    facultyId: 'updateFacultyInCharge',
+                                    lectureCredits: 'updateLectureCredits',
+                                    practicalCredits: 'updatePracticalCredits',
+                                    internshipCredits: 'updateInternshipCredits',
+                                    capstoneCredits: 'updateCapstoneCredits',
+                                    courseSummary: 'updateCourseSummary'
+                                };
+                                let showedGeneral = false;
+                                Object.keys(errors).forEach(function (k) {
+                                    const message = errors[k] || 'Invalid value.';
+                                    const fld = map[k] || null;
+                                    if (fld) {
+                                        markUpdateFieldWarning(fld, message);
+                                    } else {
+                                        // unknown field -> as general message but limited
+                                        if (!showedGeneral) {
+                                            alert(message);
+                                            showedGeneral = true;
+                                        }
+                                    }
+                                });
+                            } else {
+                                // fallback: show server message if provided, otherwise a concise generic message
+                                const msg = (res && res.message) ? res.message : 'Failed to update course. Please check your input.';
+                                alert(msg);
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        // try to parse structured response
+                        let parsed = null;
+                        try {
+                            parsed = JSON.parse(xhr.responseText || "{}");
+                        } catch (e) {
+                            // ignore parse error
+                        }
+
+                        if (parsed && parsed.errors) {
+                            // handle same as above
+                            const map = {
+                                courseName: 'updateCourseName',
+                                courseCode: 'updateCourseCode',
+                                tenHocPhan: 'updateTenHocPhan',
+                                facultyId: 'updateFacultyInCharge',
+                                lectureCredits: 'updateLectureCredits',
+                                practicalCredits: 'updatePracticalCredits',
+                                internshipCredits: 'updateInternshipCredits',
+                                capstoneCredits: 'updateCapstoneCredits',
+                                courseSummary: 'updateCourseSummary'
+                            };
+                            Object.keys(parsed.errors).forEach(function (k) {
+                                const message = parsed.errors[k] || 'Invalid value.';
+                                const fld = map[k] || null;
+                                if (fld) {
+                                    markUpdateFieldWarning(fld, message);
+                                }
+                            });
+                        } else if (parsed && parsed.message) {
+                            alert(parsed.message);
+                        } else {
+                            alert('Failed to update course due to server error. Please try again later.');
+                        }
+
+                    },
+                    complete: function () {
+                        $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    }
+                });
+            });
 
 
             // Load more courses function
