@@ -40,11 +40,7 @@ namespace SIMS.Controllers
             var people = _db.GetAllPeople();
             return View("PeopleList", people);
         }
-        public IActionResult AcademicProgram()
-        {
-            var programs = _db.GetAllAcademicPrograms();
-            return View("AcademicProgram", programs);
-        }
+        
         public IActionResult Course(int page = 1)
         {
             int pageSize = 10;

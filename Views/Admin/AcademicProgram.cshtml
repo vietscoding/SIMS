@@ -1,4 +1,4 @@
-﻿@model List<SIMS.Models.AcademicProgram>
+﻿@model SIMS.ViewModels.AcademicProgramViewModel
 
 @{
     Layout = "_AdminLayout";
@@ -6,10 +6,8 @@
 
 <div class="actionBtnBox">
     <h2>Academic Programs</h2>
-    <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh;">Filter</button>
-    <button id="addBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add</button>
-    <button id="editBtn" class="btn btn-warning" style="margin-bottom: 1vh;">Edit</button>
-    <button id="deleteBtn" class="btn btn-danger" style="margin-bottom: 1vh;">Delete</button>
+    <button id="filterProgramsBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;">Filter Academic Programs</button>
+    <button id="addProgramBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add a New Academic Programs</button>
     <hr />
 </div>
 
@@ -26,7 +24,7 @@
                 <th>Language</th>
                 <th>Description</th>
                 <th>Number of Semesters</th>
-                <th>Total Required Credits</th>
+                <th>Total</th>
                 <th>Obligated Credits</th>
                 <th>Elective Credits</th>
                 @* <th>Created At</th> *@
@@ -35,7 +33,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in Model)
+            @foreach (var p in Model.AcademicPrograms)
             {
                 <tr>
                     <td>
@@ -45,24 +43,123 @@
                     <td>
                         <a href="#" class="view-details" data-id="@p.AcademicProgramId">
                             @(p.AcademicProgramName ?? "N/A")
-
                         </a>
                     </td>
-                    <td>@(p.MajorId.HasValue? p.MajorId.Value.ToString() : @Html.Raw("<em>Not set yet</em>"))</td>
-                    <td>@(p.FacultyId.HasValue? p.FacultyId.Value.ToString() : @Html.Raw("<em>Not set yet</em>"))</td>
+
+                    <td>
+                        @if (p.Major == null || string.IsNullOrEmpty(p.Major.MajorName))
+                        {
+                            @Html.Raw("<em>Not set yet</em>")
+                        }
+                        else
+                        {
+                            @p.Major.MajorId
+                        }
+                    </td>
+
+                    <td>
+                        @if (p.Faculty == null || string.IsNullOrEmpty(p.Faculty.FacultyName))
+                        {
+                            @Html.Raw("<em>Not set yet</em>")
+                        }
+                        else
+                        {
+                            @p.Faculty.FacultyName
+                        }
+                    </td>
+
                     <td>@(p.Language ?? "N/A")</td>
-                    <td>@(string.IsNullOrEmpty(p.Description) ? "Not set yet" : (p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description))</td>
+                    <td>@(string.IsNullOrEmpty(p.Description) ? @Html.Raw("<em>Not set yet</em>") : (p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description))</td>
                     <td>@p.NumberOfSemester</td>
                     <td>@p.TotalOfRequiredCredits</td>
                     <td>@p.ObligatedCredits</td>
                     <td>@p.ElectiveCredits</td>
-                    @* <td>@(p.CreatedAt.HasValue ? p.CreatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td> *@
-                    @* <td>@(p.UpdatedAt.HasValue ? p.UpdatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td> *@
-                    @* <td>@(p.IsDeleted ? "Yes" : "No")</td> *@
                 </tr>
             }
         </tbody>
     </table>
+</div>
+
+@* Add New Program Modal*@
+<div id="addProgramModal" class="user-modal">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeAddProgramModal">&times;</span>
+        <h3>Add New Program</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-6">
+                <label for="programName" class="form-label">Program Name</label>
+                <input type="text"
+                       class="form-control"
+                       id="programName"
+                       placeholder="a program name" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="major" class="form-label">Major</label>
+                <input type="text"
+                       class="form-control"
+                       id="major"
+                       list="majorList" />
+                <datalist id="majorList">
+                    <option>Any</option>
+                    <input type="hidden" id="majorId" name="majorId" value="" />
+                </datalist>
+            </div>
+
+            <div class="col-md-6">
+                <label for="language" class="form-label">Language</label>
+                <input type="text"
+                       class="form-control"
+                       id="language"
+                       placeholder="e.g., Vietnamese" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="numberOfSemesters" class="form-label">Number of semesters</label>
+                <input type="text"
+                       class="form-control"
+                       id="numberOfSemesters"
+                       required
+                       placeholder="a positve integer required" />
+            </div>
+
+            <div class="col-md-5">
+                <label for="obligatedCredits" class="form-label">Obligated Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="obligatedCredits"
+                       placeholder="a positive number required"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-5">
+                <label for="internshipCredits" class="form-label">Elective Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="internshipCredits"
+                       placeholder="a positive number required"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-2">
+                <label for="totalCredits" class="form-label">Total Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="totalCredits"
+                       readonly
+                       placeholder="Readonly field" />
+            </div>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="addNewProgramBtn" type="button" class="btn btn-success">Add</button>
+                <button id="cancelAddNewProgramBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @* Filter Modal *@
@@ -105,6 +202,22 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Xử lý hiện/ẩn Add Program Modal
+            $("#addProgramBtn").on("click", function () {
+                $("#addProgramModal").css("display", "flex");
+            });
+            $("#closeAddProgramModal").on("click", function () {
+                $("#addProgramModal").hide();
+            });
+            $("#cancelAddNewProgramBtn").on("click", function () {
+                $("#addProgramModal").hide();
+            });
+            $("#addProgramModal").on("click", function (e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+
             $(".view-details").click(function(e) {
                 e.preventDefault();
                 const programId = $(this).data("id");
@@ -113,7 +226,7 @@
             });
 
             // Filter modal open/close
-            $("#filterBtn").on("click", function() {
+            $("#filterProgramsBtn").on("click", function() {
                 $("#filterModal").css("display", "flex");
             });
             $("#closeFilterModal").on("click", function() {
@@ -163,9 +276,9 @@
             $("#searchBtn").click(function () {
                 alert("Search button clicked (chưa có logic).");
             });
-            $("#addBtn").click(function () {
-                alert("Add button clicked (chưa có logic).");
-            });
+            // $("#addBtn").click(function () {
+            //     alert("Add button clicked (chưa có logic).");
+            // });
             $("#editBtn").click(function () {
                 alert("Edit button clicked (chưa có logic).");
             });

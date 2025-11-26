@@ -17,6 +17,8 @@ namespace SIMS.Data
         public List<AcademicProgram> GetAllAcademicPrograms() // Lấy tất cả các chương trình học
         {
             return _context.AcademicPrograms
+                .Include(p => p.Major)
+                .Include(p => p.Faculty)
                 .AsNoTracking()
                 .OrderBy(p => p.AcademicProgramName ?? "")
                 .ToList();

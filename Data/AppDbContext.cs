@@ -15,6 +15,8 @@ namespace SIMS.Data
         public DbSet<Faculty> Faculties => Set<Faculty>();
         public DbSet<Major> Majors => Set<Major>();
         public DbSet<Course> Courses => Set<Course>();
+        public DbSet<Curriculum> Curriculum => Set<Curriculum>();
+        public DbSet<CourseDependency> CourseDependencyies=> Set<CourseDependency>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

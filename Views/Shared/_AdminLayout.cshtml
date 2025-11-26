@@ -60,7 +60,7 @@
                 <img src="~/icons/person_book_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">People</span>
             </a>
-            <a asp-controller="Admin" asp-action="AcademicProgram" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram" ? "active" : "")">
+            <a asp-controller="AcademicProgram" asp-action="AcademicProgram" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicProgram" && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram" ? "active" : "")">
                 <img src="~/icons/clinical_notes_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Programs</span>
             </a>

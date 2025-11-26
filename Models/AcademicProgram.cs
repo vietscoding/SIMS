@@ -28,6 +28,7 @@ namespace SIMS.Models
         [Column("number_of_semester")]
         public byte NumberOfSemester { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("total_of_required_credits")]
         public decimal TotalOfRequiredCredits { get; set; }
 
