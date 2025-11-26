@@ -30,9 +30,9 @@
                 <th>Total Required Credits</th>
                 <th>Obligated Credits</th>
                 <th>Elective Credits</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Is Deleted</th>
+                @* <th>Created At</th> *@
+                @* <th>Updated At</th> *@
+                @* <th>Is Deleted</th> *@
             </tr>
         </thead>
         <tbody>
@@ -49,17 +49,17 @@
 
                         </a>
                     </td>
-                    <td>@(p.MajorId.HasValue ? p.MajorId.Value.ToString() : "N/A")</td>
-                    <td>@(p.FacultyId.HasValue ? p.FacultyId.Value.ToString() : "N/A")</td>
+                    <td>@(p.MajorId.HasValue? p.MajorId.Value.ToString() : @Html.Raw("<em>Not set yet</em>"))</td>
+                    <td>@(p.FacultyId.HasValue? p.FacultyId.Value.ToString() : @Html.Raw("<em>Not set yet</em>"))</td>
                     <td>@(p.Language ?? "N/A")</td>
-                    <td>@(string.IsNullOrEmpty(p.Description) ? "N/A" : (p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description))</td>
+                    <td>@(string.IsNullOrEmpty(p.Description) ? "Not set yet" : (p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description))</td>
                     <td>@p.NumberOfSemester</td>
                     <td>@p.TotalOfRequiredCredits</td>
                     <td>@p.ObligatedCredits</td>
                     <td>@p.ElectiveCredits</td>
-                    <td>@(p.CreatedAt.HasValue ? p.CreatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td>
-                    <td>@(p.UpdatedAt.HasValue ? p.UpdatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td>
-                    <td>@(p.IsDeleted ? "Yes" : "No")</td>
+                    @* <td>@(p.CreatedAt.HasValue ? p.CreatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td> *@
+                    @* <td>@(p.UpdatedAt.HasValue ? p.UpdatedAt.Value.ToString("yyyy-MM-dd") : "N/A")</td> *@
+                    @* <td>@(p.IsDeleted ? "Yes" : "No")</td> *@
                 </tr>
             }
         </tbody>
