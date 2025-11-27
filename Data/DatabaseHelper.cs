@@ -24,6 +24,16 @@ namespace SIMS.Data
                 .ToList();
         }
 
+        // New: expose IQueryable so controllers can build server-side filtered queries
+        public IQueryable<AcademicProgram> GetAcademicPrograms()
+        {
+            // Do not AsNoTracking here so callers can choose tracking or not; include navigations so projections can use names.
+            return _context.AcademicPrograms
+                .Include(p => p.Major)
+                .Include(p => p.Faculty)
+                .AsQueryable();
+        }
+
         public List<Person> GetAllPeople() // Lấy tất cả các người
         {
             return _context.People
@@ -118,6 +128,8 @@ namespace SIMS.Data
         public AcademicProgram GetAcademicProgramById(int programId) // Lấy chương trình học theo ID
         {
             return _context.AcademicPrograms
+                .Include(f => f.Faculty)
+                .Include(m => m.Major)
                 .AsNoTracking()
                 .FirstOrDefault(p => p.AcademicProgramId == programId) ?? new AcademicProgram();  
         }
@@ -250,7 +262,7 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }
 
-        public bool RemoveMajor(int majorId) // Xóa ngành theo ID
+        public bool RemoveMajor(int majorId) // Xóa ngành mới
         {
             var major = _context.Majors.Find(majorId);
             if (major == null)
