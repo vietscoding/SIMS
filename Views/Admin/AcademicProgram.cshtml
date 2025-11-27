@@ -101,8 +101,32 @@
                        id="major"
                        list="majorList" />
                 <datalist id="majorList">
-                    <option>Any</option>
+                    @{
+                        var majors = Model.Majors;
+                        foreach (var m in majors)
+                        {
+                            <option data-id="@m.MajorId" value="@m.MajorName">@m.TenNganh</option>
+                        }
+                    }
                     <input type="hidden" id="majorId" name="majorId" value="" />
+                </datalist>
+            </div>
+
+            <div class="col-md-6">
+                <label for="faculty" class="form-label">Faculty in charge</label>
+                <input type="text"
+                       class="form-control"
+                       id="faculty"
+                       list="facultyList" />
+                <datalist id="facultyList">
+                    @{
+                        var faculties = Model.Faculties;
+                        foreach (var f in faculties)
+                        {
+                            <option data-id="@f.FacultyId" value="@f.FacultyName">@f.TenKhoa</option>
+                        }
+                    }
+                    <input type="hidden" id="facultyId" name="facultyId" value="" />
                 </datalist>
             </div>
 
@@ -113,7 +137,13 @@
                        id="language"
                        placeholder="e.g., Vietnamese" />
             </div>
-
+            <div class="col-md-6">
+                <label for="description" class="form-label">Description</label>
+                <input type="text"
+                       class="form-control"
+                       id="description"
+                       placeholder="a meaningful description" />
+            </div>
             <div class="col-md-6">
                 <label for="numberOfSemesters" class="form-label">Number of semesters</label>
                 <input type="text"
@@ -197,6 +227,102 @@
     </div>
 </div>
 
+<div id="filterModal" class="user-modal">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeFilterModal">&times;</span>
+        <h3>Filter Programs</h3>
+        <div class="row g-3" style="margin-top:12px;">
+
+            <div class="col-md-6">
+                <label for="filterProgramName" class="form-label">Program name contains</label>
+                <input type="text" class="form-control" id="filterProgramName" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="filterMajorInProgram" class="form-label">Major</label>
+                <select class="form-select" id="filterMajorInProgram">
+                    <option value="">Any</option>
+                    @{
+                        if (majors != null)
+                        {
+                            foreach (var m in majors)
+                            {
+                                // <option value="@f.FacultyId">@f.FacultyName</option>
+                                <option data-id="@m.MajorId" value="@m.MajorName">@m.TenNganh</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="filterFacultyInCharge" class="form-label">Faculty in charge</label>
+                <select class="form-select" id="filterFacultyInCharge">
+                    <option value="">Any</option>
+                    @{
+                        if (faculties != null)
+                        {
+                            foreach (var f in faculties)
+                            {
+                                // <option value="@f.FacultyId">@f.FacultyName</option>
+                                <option data-id="@f.FacultyId" value="@f.FacultyName">@f.TenKhoa</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-12">
+                <label for="filterSummary" class="form-label">Course Summary</label>
+                <input type="text" class="form-control" id="filterSummary" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Obligated Credits (min)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterObligatedMin" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Obligated Credits (max)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterObligatedMax" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Elective Credits (min)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterElectiveMin" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Elective Credits (max)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterElectiveMax" />
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Total Credits (min)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMin" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Total Credits (max)</label>
+                <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMax" />
+            </div>
+
+            <div class="col-md-12">
+                <label for="filterSummary" class="form-label">Course Summary</label>
+                <input type="text" class="form-control" id="filterSummary" />
+            </div>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
+                <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -270,6 +396,85 @@
                 $("#filterMajorId").val("");
                 $("#filterFacultyId").val("");
                 $("#filterBtn").removeClass("has-active-filters");
+            });
+
+            // Add new program handler
+            $("#addNewProgramBtn").on("click", function () {
+                const programName = ($("#programName").val() || "").toString().trim();
+                const majorText = ($("#major").val() || "").toString().trim();
+                const facultyText = ($("#faculty").val() || "").toString().trim();
+                const language = ($("#language").val() || "").toString().trim();
+                const description = ($("#description").val() || "").toString().trim();
+                const numberOfSemestersRaw = $("#numberOfSemesters").val();
+                const numberOfSemesters = parseInt(numberOfSemestersRaw, 10);
+                const obligatedCredits = parseFloat($("#obligatedCredits").val() || "0") || 0;
+                const electiveCredits = parseFloat($("#internshipCredits").val() || "0") || 0;
+                const totalCredits = obligatedCredits + electiveCredits;
+
+                $("#totalCredits").val(totalCredits);
+
+                // Basic validation
+                if (!programName) {
+                    alert("Program name is required.");
+                    return;
+                }
+                if (isNaN(numberOfSemesters) || numberOfSemesters <= 0) {
+                    alert("Number of semesters must be a positive integer.");
+                    return;
+                }
+                if (obligatedCredits < 0 || electiveCredits < 0) {
+                    alert("Credit values must be non-negative.");
+                    return;
+                }
+
+                // Resolve majorId and facultyId from datalist options (if present)
+                let majorId = null;
+                if (majorText) {
+                    const majOpt = $("#majorList option").filter(function () { return $(this).val() === majorText; }).first();
+                    if (majOpt.length) {
+                        majorId = parseInt(majOpt.data("id")) || null;
+                    }
+                }
+                let facultyId = null;
+                if (facultyText) {
+                    const facOpt = $("#facultyList option").filter(function () { return $(this).val() === facultyText; }).first();
+                    if (facOpt.length) {
+                        facultyId = parseInt(facOpt.data("id")) || null;
+                    }
+                }
+
+                const payload = {
+                    AcademicProgramName: programName,
+                    MajorId: majorId,
+                    FacultyId: facultyId,
+                    Language: language,
+                    Description: description,
+                    NumberOfSemester: numberOfSemesters,
+                    ObligatedCredits: obligatedCredits,
+                    ElectiveCredits: electiveCredits,
+                    TotalOfRequiredCredits: totalCredits
+                };
+
+                $.ajax({
+                    url: '/AcademicProgram/AddAcademicProgram',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function (resp) {
+                        alert(resp?.message || "Program added successfully.");
+                        $("#addProgramModal").hide();
+                        // reload to show new entry
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        let msg = "Failed to add program.";
+                        try {
+                            const json = xhr.responseJSON || JSON.parse(xhr.responseText || "{}");
+                            if (json && json.message) msg = json.message;
+                        } catch (e) { }
+                        alert(msg);
+                    }
+                });
             });
 
             // Test notifications cho các nút hành động

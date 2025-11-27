@@ -11,10 +11,19 @@ namespace SIMS.Models
         public int FacultyId { get; set; }
 
         [Column("faculty_name")]
-        public string FacultyName { get; set; } = string.Empty;
+        public string? FacultyName { get; set; } = string.Empty;
 
         [Column("ten_khoa")]
-        public string TenKhoa { get; set; } = string.Empty;
+        public string? TenKhoa { get; set; } = string.Empty;
+
+        [Column("created_at")]
+        public DateTime? CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+
+        [Column("is_deleted")]
+        public bool? IsDeleted { get; set; }
 
         public Faculty() { }
     }

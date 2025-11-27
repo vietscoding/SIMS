@@ -26,17 +26,17 @@ namespace SIMS.Models
         public string? Description { get; set; }
 
         [Column("number_of_semester")]
-        public byte NumberOfSemester { get; set; }
+        public byte? NumberOfSemester { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("total_of_required_credits")]
-        public decimal TotalOfRequiredCredits { get; set; }
+        public decimal? TotalOfRequiredCredits { get; set; }
 
         [Column("obligated_credits")]
-        public decimal ObligatedCredits { get; set; }
+        public decimal? ObligatedCredits { get; set; }
 
         [Column("elective_credits")]
-        public decimal ElectiveCredits { get; set; }
+        public decimal? ElectiveCredits { get; set; }
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
@@ -45,7 +45,7 @@ namespace SIMS.Models
         public DateTime? UpdatedAt { get; set; }
 
         [Column("is_deleted")]
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
 
         public AcademicProgram() { }
 

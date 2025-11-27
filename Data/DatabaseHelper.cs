@@ -59,10 +59,40 @@ namespace SIMS.Data
 
         public List<Major> GetAllMajors() // Lấy tất cả các ngành
         {
-            return _context.Majors
+            // Project into an anonymous type first so EF Core emits COALESCE for nullable string columns.
+            // This avoids ADO.NET calling GetString on NULL DB values.
+            var rows = _context.Majors
                 .AsNoTracking()
-                .OrderBy(m => m.MajorName ?? "")
+                .Select(m => new
+                {
+                    m.MajorId,
+                    MajorName = m.MajorName ?? string.Empty,
+                    AlternativeMajorName = m.AlternativeMajorName ?? string.Empty,
+                    MajorCode = m.MajorCode ?? string.Empty,
+                    TenNganh = m.TenNganh ?? string.Empty,
+                    m.FacultyId,
+                    m.CreatedAt,
+                    m.UpdatedAt,
+                    m.IsDeleted
+                })
+                .OrderBy(x => x.MajorName)
                 .ToList();
+
+            // Materialize plain Major instances in-memory from the projected rows.
+            var result = rows.Select(r => new Major
+            {
+                MajorId = r.MajorId,
+                MajorName = r.MajorName,
+                AlternativeMajorName = r.AlternativeMajorName,
+                MajorCode = r.MajorCode,
+                TenNganh = r.TenNganh,
+                FacultyId = r.FacultyId,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                IsDeleted = r.IsDeleted
+            }).ToList();
+
+            return result;
         }
 
 
