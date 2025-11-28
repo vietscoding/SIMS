@@ -89,5 +89,32 @@ namespace SIMS.Controllers
 
             return Json(new { success = true, message = "Course added to program.", curriculumId = curriculum.CurriculumId });
         }
+
+        // POST: /ProgramDetail/DeleteCurriculum
+        [HttpPost]
+        public IActionResult DeleteCurriculum([FromBody] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid curriculum id." });
+            }
+
+            var existing = _db.GetCurriculumById(id);
+            if (existing == null || existing.CurriculumId == 0)
+            {
+                return NotFound(new { success = false, message = "Curriculum not found." });
+            }
+
+            // Optional: ensure the curriculum belongs to the program shown (extra safety)
+            // if (existing.ProgramId != expectedProgramId) { ... }
+
+            var removed = _db.RemoveCurriculum(id);
+            if (!removed)
+            {
+                return StatusCode(500, new { success = false, message = "Failed to delete curriculum. Please try again." });
+            }
+
+            return Json(new { success = true, message = "Curriculum removed from program." });
+        }
     }
 }

@@ -487,5 +487,70 @@ namespace SIMS.Data
                 .FirstOrDefault(cd => cd.CourseDependencyId == courseDependencyId) ?? new CourseDependency();
         }
 
+        // Add this method inside the existing DatabaseHelper class.
+        //public bool RemoveCurriculum(int curriculumId)
+        //{
+        //    // Guard
+        //    if (curriculumId <= 0) return false;
+
+        //    // Try find the curriculum
+        //    var curriculum = _context.Curriculum.Find(curriculumId);
+        //    if (curriculum == null) return false;
+
+        //    // Prefer soft-delete if the column exists; fallback to physical delete.
+        //    try
+        //    {
+        //        // If a soft-delete column is present, mark it and update timestamp
+        //        if (curriculum.GetType().GetProperty("IsDeleted") != null)
+        //        {
+        //            curriculum.IsDeleted = true;
+        //            curriculum.UpdatedAt = DateTime.Now;
+        //            _context.Entry(curriculum).State = EntityState.Modified;
+        //        }
+        //        else
+        //        {
+        //            _context.Curriculum.Remove(curriculum);
+        //        }
+
+        //        return _context.SaveChanges() > 0;
+        //    }
+        //    catch
+        //    {
+        //        return false;
+        //    }
+        //    _context.Curriculum.Remove(curriculum);
+        //    return _context.SaveChanges() > 0;
+
+
+        //}
+
+        public bool RemoveCurriculum(int curriculumId)
+        {
+            // Guard
+            if (curriculumId <= 0) return false;
+
+            // Try find the curriculum
+            var curriculum = _context.Curriculum.Find(curriculumId);
+
+            // Nếu không tìm thấy, coi như đã 'xóa' (hoặc không cần làm gì)
+            if (curriculum == null) return false;
+
+            try
+            {
+                // ➡️ THỰC HIỆN XÓA CỨNG: Loại bỏ đối tượng khỏi Context
+                // Điều này sẽ tạo ra lệnh DELETE trong cơ sở dữ liệu
+                _context.Curriculum.Remove(curriculum);
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                return _context.SaveChanges() > 0;
+            }
+            catch (Exception ex)
+            {
+                // Ghi log (nên thêm logic ghi log thực tế ở đây)
+                // Ví dụ: Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
     }
 }
