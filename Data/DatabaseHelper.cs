@@ -240,6 +240,7 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }   
 
+
         public bool RemoveAcademicProgram(int programId) // Xóa chương trình học theo ID
         {
             var program = _context.AcademicPrograms.Find(programId);
@@ -309,6 +310,7 @@ namespace SIMS.Data
             return true;
         }
 
+        // Updated: update full academic program fields
         public bool UpdateAcademicProgram(AcademicProgram program) // Cập nhật thông tin chương trình học
         {
             var existingProgram = _context.AcademicPrograms.Find(program.AcademicProgramId);
@@ -316,8 +318,18 @@ namespace SIMS.Data
             {
                 return false;
             }
+
             existingProgram.AcademicProgramName = program.AcademicProgramName;
-            
+            existingProgram.MajorId = program.MajorId;
+            existingProgram.FacultyId = program.FacultyId;
+            existingProgram.Language = program.Language;
+            existingProgram.Description = program.Description;
+            existingProgram.NumberOfSemester = program.NumberOfSemester;
+            existingProgram.ObligatedCredits = program.ObligatedCredits;
+            existingProgram.ElectiveCredits = program.ElectiveCredits;
+            existingProgram.TotalOfRequiredCredits = (program.ObligatedCredits ?? 0m) + (program.ElectiveCredits ?? 0m);
+            existingProgram.UpdatedAt = DateTime.Now;
+
             _context.SaveChanges();
             return true;
         }
@@ -390,6 +402,81 @@ namespace SIMS.Data
                 .AsNoTracking()
                 .Include(c => c.Faculty)
                 .FirstOrDefault(c => c.CourseId == courseId) ?? new Course();
+        }
+
+        // Lấy tất cả các giáo trình / khung chương trình (Curriculum)
+        public List<Curriculum> GetAllCurriculums()
+        {
+            return _context.Curriculum
+                .Include(c => c.Program)
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .OrderBy(c => c.CurriculumId)
+                .ToList();
+        }
+
+        // Lấy curriculum theo ID
+        public Curriculum GetCurriculumById(int curriculumId)
+        {
+            return _context.Curriculum
+                .Include(c => c.Program)
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .FirstOrDefault(c => c.CurriculumId == curriculumId) ?? new Curriculum();
+        }
+
+        // Lấy các curriculum theo ProgramId
+        /// <summary>
+        /// Lấy tất cả các chương trình học theo một ProgramId cụ thể
+        /// </summary>
+        /// <param name="programId"></param>
+        /// <returns></returns>
+        public List<Curriculum> GetAllCurriculumsByProgramId(int programId)
+        {
+            return _context.Curriculum
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .Where(c => c.ProgramId == programId)
+                .OrderBy(c => c.CurriculumId)
+                .ToList();
+        }
+
+        // Lấy tất cả các CourseDependency
+        public List<CourseDependency> GetAllCourseDependencies()
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.Curriculum)
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .OrderBy(cd => cd.CourseDependencyId)
+                .ToList();
+        }
+
+        // Lấy tất cả CourseDependency theo CurriculumId
+        public List<CourseDependency> GetAllCourseDependenciesByCurriculumId(int curriculumId)
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .Where(cd => cd.CurriculumId == curriculumId)
+                .OrderBy(cd => cd.CourseDependencyId)
+                .ToList();
+        }
+
+        // Lấy CourseDependency theo ID
+        public CourseDependency GetCourseDependencyById(int courseDependencyId)
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.Curriculum)
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .FirstOrDefault(cd => cd.CourseDependencyId == courseDependencyId) ?? new CourseDependency();
         }
 
     }

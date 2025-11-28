@@ -3,7 +3,7 @@
 @{
     Layout = "_AdminLayout";
 }
-
+<div style="margin-left:1vw;">
 <div class="actionBtnBox">
     <h2>Courses List</h2>
     <button id="filterBtn" type="button" class="btn btn-primary" style="margin-right:1vh">Filter Courses</button>
@@ -78,13 +78,12 @@
                         }
                     </td>
                 </tr>
-                 stt++;
+                stt++;
             }
-
         </tbody>
     </table>
 </div>
-
+</div>
 @* Add New Course Modal*@
 <div id="addCourseModal" class="user-modal">
     <div class="user-modal-content">
@@ -419,7 +418,7 @@
             </div>
 
             <div class="col-12" style="margin-top:20px; ">
-                <button id="updateCourseBtn" type="button" class="btn btn-success" disabled>Update</button>
+                <button id="updateCourseBtn" type="button" class="btn btn-warning" disabled>Update</button>
                 <button id="deleteCourseBtn" type="button" class="btn btn-danger">Delete</button>
                 <button id="cancelUpdateCourseBtn" type="button" class="btn btn-outline-secondary">Cancel</button>
             </div>
