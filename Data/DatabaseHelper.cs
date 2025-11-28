@@ -207,6 +207,14 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }
 
+        // Add this method into the existing DatabaseHelper class.
+        public bool AddCurriculum(Curriculum curriculum)
+        {
+            if (curriculum == null) return false;
+            _context.Curriculum.Add(curriculum);
+            return _context.SaveChanges() > 0;
+        }
+
         public bool RemoveStudent(int studentId) // Xóa sinh viên theo ID
         {
             var student = _context.Students.Find(studentId);

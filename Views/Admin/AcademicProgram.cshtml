@@ -6,9 +6,9 @@
 
 <div style="margin-left:1vw;">
     <div class="actionBtnBox">
-        <h2>Academic Programs</h2>
-        <button id="filterProgramsBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;">Filter Academic Programs</button>
-        <button id="addProgramBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add a New Academic Programs</button>
+        <h2><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M680-320q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T720-440q0-17-11.5-28.5T680-480q-17 0-28.5 11.5T640-440q0 17 11.5 28.5T680-400ZM440-40v-116q0-21 10-39.5t28-29.5q32-19 67.5-31.5T618-275l62 75 62-75q37 6 72 18.5t67 31.5q18 11 28.5 29.5T920-156v116H440Zm79-80h123l-54-66q-18 5-35 13t-34 17v36Zm199 0h122v-36q-16-10-33-17.5T772-186l-54 66Zm-76 0Zm76 0Zm-518 0q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v200q-16-20-35-38t-45-24v-138H200v560h166q-3 11-4.5 22t-1.5 22v36H200Zm80-480h280q26-20 57-30t63-10v-40H280v80Zm0 160h200q0-21 4.5-41t12.5-39H280v80Zm0 160h138q11-9 23.5-16t25.5-13v-51H280v80Zm-80 80v-560 137-17 440Zm480-240Z" /></svg> Academic Programs</h2>
+        <button id="filterProgramsBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z" /></svg> Filter Academic Programs</button>
+        <button id="addProgramBtn" class="btn btn-success" style="margin-bottom: 1vh;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z" /></svg> Add a New Academic Program</button>
         <hr />
     </div>
 
@@ -166,10 +166,10 @@
             </div>
 
             <div class="col-md-5">
-                <label for="internshipCredits" class="form-label">Elective Credits</label>
+                <label for="electiveCredits" class="form-label">Elective Credits</label>
                 <input type="number"
                        class="form-control"
-                       id="internshipCredits"
+                       id="electiveCredits"
                        placeholder="a positive number required"
                        value="0"
                        min="0"
@@ -197,7 +197,7 @@
 <div id="filterModal" class="user-modal">
     <div class="user-modal-content">
         <span class="close-modal" id="closeFilterModal">&times;</span>
-        <h3>Filter Programs</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/></svg> Filter Programs</h3>
         <div class="row g-3" style="margin-top:12px;">
 
             <div class="col-md-8">
@@ -239,16 +239,16 @@
                     }
                 </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label for="filterLanguage" class="form-label">Language</label>
                 <input type="text" class="form-control" id="filterLanguage" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label">Obligated Credits (min)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterObligatedMin" />
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label">Obligated Credits (max)</label>
                 <input type="number" step="0.5" min="0" class="form-control" id="filterObligatedMax" />
             </div>
@@ -275,7 +275,7 @@
 
             <div class="col-md-12">
                 <label for="filterDescription" class="form-label">Description</label>
-                <input type="text" class="form-control" id="filterDescription" />
+                <textarea type="text" class="form-control" id="filterDescription"></textarea>
             </div>
 
             <div class="col-12" style="margin-top:20px;">
@@ -338,7 +338,7 @@
                 const numberOfSemestersRaw = $("#numberOfSemesters").val();
                 const numberOfSemesters = parseInt(numberOfSemestersRaw, 10);
                 const obligatedCredits = parseFloat($("#obligatedCredits").val() || "0") || 0;
-                const electiveCredits = parseFloat($("#internshipCredits").val() || "0") || 0;
+                const electiveCredits = parseFloat($("#electiveCredits").val() || "0") || 0;
                 const totalCredits = obligatedCredits + electiveCredits;
 
                 $("#totalCredits").val(totalCredits);
@@ -481,7 +481,7 @@
                                         </td>
                                         <td>${p.academicProgramId}</td>
                                         <td>
-                                            <a href="/Admin/ProgramDetail/${p.academicProgramId}" class="view-details" data-id="${p.academicProgramId}">${p.academicProgramName || "N/A"}</a>
+                                            <a href="/ProgramDetail/ProgramDetail/${p.academicProgramId}" class="view-details" data-id="${p.academicProgramId}">${p.academicProgramName || "N/A"}</a>
                                         </td>
                                         <td>${majorCell}</td>
                                         <td>${facultyCell}</td>
@@ -592,3 +592,4 @@
         });
     </script>
 }
+    

@@ -2,11 +2,12 @@
 using SIMS.Data;
 using SIMS.Models;
 using SIMS.ViewModels;
+using System;
 using System.Linq;
 
 namespace SIMS.Controllers
 {
-    public class ProgramDetailController : Controller
+    public partial class ProgramDetailController : Controller
     {
         private readonly DatabaseHelper _db;
         public ProgramDetailController(DatabaseHelper db)
@@ -47,5 +48,46 @@ namespace SIMS.Controllers
             return View("Views/Admin/ProgramDetail.cshtml", model);
         }
 
+        // POST: /ProgramDetail/AddCurriculum
+        [HttpPost]
+        public IActionResult AddCurriculum([FromBody] CurriculumCreateModel model)
+        {
+            if (model == null)
+                return BadRequest(new { success = false, message = "Invalid request payload." });
+
+            if (model.ProgramId <= 0 || model.CourseId <= 0)
+                return BadRequest(new { success = false, message = "ProgramId and CourseId must be positive integers." });
+
+            var program = _db.GetAcademicProgramById(model.ProgramId);
+            if (program == null || program.AcademicProgramId == 0)
+                return NotFound(new { success = false, message = "Program not found." });
+             //|| course.CourseId == 0
+            var course = _db.GetCourseById(model.CourseId);
+            if (course == null)
+                return NotFound(new { success = false, message = "Course not found." });
+
+            // Prevent duplicate (non-deleted) curriculum entry
+            var existing = _db.GetAllCurriculumsByProgramId(model.ProgramId)
+                              .FirstOrDefault(c => (c.CourseId ?? 0) == model.CourseId && !(c.IsDeleted ?? false));
+            if (existing != null)
+                return Conflict(new { success = false, message = "This course is already part of the program." });
+
+            var curriculum = new Curriculum
+            {
+                ProgramId = model.ProgramId,
+                CourseId = model.CourseId,
+                IsElective = false,
+                IsBeforeCapstoneProject = false,
+                IsPrerequisiteCapstoneProject = false,
+                IsDeleted = false,
+                CreatedAt = DateTime.Now
+            };
+
+            var added = _db.AddCurriculum(curriculum);
+            if (!added)
+                return StatusCode(500, new { success = false, message = "Failed to add course to program. Please try again." });
+
+            return Json(new { success = true, message = "Course added to program.", curriculumId = curriculum.CurriculumId });
+        }
     }
 }
