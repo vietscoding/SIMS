@@ -11,22 +11,28 @@ namespace SIMS.Models
         public int MajorId { get; set; }
 
         [Column("major_name")]
-        public string MajorName { get; set; } = string.Empty;
+        public string? MajorName { get; set; } = string.Empty;
 
         [Column("alternative_major_name")]
-        public string AlternativeMajorName { get; set; } = string.Empty;
+        public string? AlternativeMajorName { get; set; } = string.Empty;
 
         [Column("major_code")]
-        public string MajorCode { get; set; } = string.Empty;
+        public string? MajorCode { get; set; } = string.Empty;
 
         [Column("ten_nganh")]
-        public string TenNganh { get; set; } = string.Empty;
+        public string? TenNganh { get; set; } = string.Empty;
 
         [Column("faculty_id")]
-        public int FacultyId { get; set; }
+        public int? FacultyId { get; set; }
+
+        [Column("created_at")]
+        public DateTime? CreatedAt{ get; set; }
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
 
         [Column("is_deleted")]
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
 
         public Major() { }
 

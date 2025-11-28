@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36429.23
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SIMS", "SIMS.csproj", "{166927C0-4774-4E39-A865-670F736C994F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SIMS.Tests", "..\SIMS.Tests\SIMS.Tests.csproj", "{75787685-800E-4714-BA62-98211D14C8CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{166927C0-4774-4E39-A865-670F736C994F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{166927C0-4774-4E39-A865-670F736C994F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{166927C0-4774-4E39-A865-670F736C994F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75787685-800E-4714-BA62-98211D14C8CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75787685-800E-4714-BA62-98211D14C8CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75787685-800E-4714-BA62-98211D14C8CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75787685-800E-4714-BA62-98211D14C8CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

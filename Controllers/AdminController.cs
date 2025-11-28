@@ -40,11 +40,7 @@ namespace SIMS.Controllers
             var people = _db.GetAllPeople();
             return View("PeopleList", people);
         }
-        public IActionResult AcademicProgram()
-        {
-            var programs = _db.GetAllAcademicPrograms();
-            return View("AcademicProgram", programs);
-        }
+        
         public IActionResult Course(int page = 1)
         {
             int pageSize = 10;
@@ -102,6 +98,7 @@ namespace SIMS.Controllers
                 courseId = course.CourseId,
                 courseCode = course.CourseCode,
                 courseName = course.CourseName,
+                tenHocPhan = course.TenHocPhan,
                 facultyId = course.FacultyId,
                 facultyName = course.Faculty?.FacultyName,
                 totalCredits = totalCredits,
@@ -109,9 +106,72 @@ namespace SIMS.Controllers
                 practicalCredits = course.PracticalCredits,
                 internshipCredits = course.InternshipCredits,
                 capstoneCredits = course.CapstoneCredits,
-                summary = course.CourseSummary
+                courseSummary = course.CourseSummary
             });
         }
+
+        [HttpPost]
+        public IActionResult DeleteCourse([FromBody] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid course ID." });
+            }
+            var existingCourse = _db.GetCourseById(id);
+            if (existingCourse == null)
+            {
+                return NotFound(new { success = false, message = "Course not found." });
+            }
+            var deleted = _db.RemoveCourse(id);
+            if (!deleted)
+            {
+                return StatusCode(500, new { message = "Failed to delete course. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Course deleted successfully." });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult UpdateCourse([FromBody] Course course)
+        {
+            if (course == null || course.CourseId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid course data." });
+            }
+            var existingCourse = _db.GetCourseById(course.CourseId);
+            if (existingCourse == null)
+            {
+                return NotFound(new { success = false, message = "Course not found." });
+            }
+            Faculty existingFaculty = _db.GetFacultyById(course.FacultyId ?? 0);
+            if (existingFaculty == null)
+            {
+                return BadRequest(new { success = false, message = "Specified faculty does not exist." });
+            }
+
+            // Update fields
+            existingCourse.CourseName = course.CourseName?.Trim();
+            existingCourse.TenHocPhan = course.TenHocPhan?.Trim();
+            existingCourse.CourseCode = course.CourseCode?.Trim();
+            existingCourse.FacultyId = course.FacultyId;
+            existingCourse.LectureCredits = course.LectureCredits;
+            existingCourse.PracticalCredits = course.PracticalCredits;
+            existingCourse.InternshipCredits = course.InternshipCredits;
+            existingCourse.CapstoneCredits = course.CapstoneCredits;
+            existingCourse.CourseSummary = course.CourseSummary?.Trim();
+            var updated = _db.UpdateCourse(existingCourse);
+            if (!updated)
+            {
+                return StatusCode(500, new { message = "Failed to update course. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Course updated successfully." });
+            }
+        }
+
 
         // Server-side filtered paging for infinite scroll
         [HttpGet]
@@ -138,8 +198,8 @@ namespace SIMS.Controllers
             {
                 var term = name.Trim();
                 query = query.Where(c =>
-                    ((c.CourseName ?? string.Empty).Contains(term)) ||
-                    ((c.TenHocPhan ?? string.Empty).Contains(term))
+                    (c.CourseName ?? string.Empty).Contains(term) ||
+                    (c.TenHocPhan ?? string.Empty).Contains(term)
                 );
             }
 
@@ -158,8 +218,8 @@ namespace SIMS.Controllers
             {
                 var term = summary.Trim();
                 query = query.Where(c =>
-                    ((c.CourseSummary ?? string.Empty).Contains(term)) ||
-                    ((c.CourseName ?? string.Empty).Contains(term))
+                    (c.CourseSummary ?? string.Empty).Contains(term) ||
+                    (c.CourseName ?? string.Empty).Contains(term)
                 );
             }
 
@@ -243,7 +303,8 @@ namespace SIMS.Controllers
                 }),
                 currentPage = page,
                 totalPages = totalPages,
-                totalItems = totalItems
+                totalItems = totalItems,
+                
             });
         }
 

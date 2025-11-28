@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SIMS.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/stick_div.css" asp-append-version="true" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body class="admin-layout">
@@ -32,7 +33,7 @@
                 <div class="user-title">Admin</div>
             </div>
         </div>
-
+        <hr />
         <!-- User Modal -->
         <div id="userModal" class="user-modal">
             <div class="user-modal-content">
@@ -59,7 +60,19 @@
                 <img src="~/icons/person_book_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">People</span>
             </a>
-            <a asp-controller="Admin" asp-action="AcademicProgram" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram" ? "active" : "")">
+            @* <a asp-controller="AcademicProgram" asp-action="AcademicProgram" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicProgram" && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram" ? "active" : "")">
+                <img src="~/icons/clinical_notes_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
+                <span class="menu-text">Programs</span>
+            </a> *@
+            <a asp-controller="AcademicProgram"
+               asp-action="AcademicProgram"
+               class="menu-item @((
+                       ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicProgram"
+                       || ViewContext.RouteData.Values["controller"]?.ToString() == "ProgramDetail"
+                   )
+                                  && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram"
+                                  || ViewContext.RouteData.Values["action"]?.ToString() == "ProgramDetail"
+                   ? "active" : "")">
                 <img src="~/icons/clinical_notes_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Programs</span>
             </a>
@@ -87,7 +100,8 @@
             <small>&copy; @DateTime.Now.Year</small>
         </footer>
     </div>
-
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/sidebar.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

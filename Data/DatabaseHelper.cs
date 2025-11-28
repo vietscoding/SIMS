@@ -17,9 +17,21 @@ namespace SIMS.Data
         public List<AcademicProgram> GetAllAcademicPrograms() // Lấy tất cả các chương trình học
         {
             return _context.AcademicPrograms
+                .Include(p => p.Major)
+                .Include(p => p.Faculty)
                 .AsNoTracking()
                 .OrderBy(p => p.AcademicProgramName ?? "")
                 .ToList();
+        }
+
+        // New: expose IQueryable so controllers can build server-side filtered queries
+        public IQueryable<AcademicProgram> GetAcademicPrograms()
+        {
+            // Do not AsNoTracking here so callers can choose tracking or not; include navigations so projections can use names.
+            return _context.AcademicPrograms
+                .Include(p => p.Major)
+                .Include(p => p.Faculty)
+                .AsQueryable();
         }
 
         public List<Person> GetAllPeople() // Lấy tất cả các người
@@ -57,10 +69,40 @@ namespace SIMS.Data
 
         public List<Major> GetAllMajors() // Lấy tất cả các ngành
         {
-            return _context.Majors
+            // Project into an anonymous type first so EF Core emits COALESCE for nullable string columns.
+            // This avoids ADO.NET calling GetString on NULL DB values.
+            var rows = _context.Majors
                 .AsNoTracking()
-                .OrderBy(m => m.MajorName ?? "")
+                .Select(m => new
+                {
+                    m.MajorId,
+                    MajorName = m.MajorName ?? string.Empty,
+                    AlternativeMajorName = m.AlternativeMajorName ?? string.Empty,
+                    MajorCode = m.MajorCode ?? string.Empty,
+                    TenNganh = m.TenNganh ?? string.Empty,
+                    m.FacultyId,
+                    m.CreatedAt,
+                    m.UpdatedAt,
+                    m.IsDeleted
+                })
+                .OrderBy(x => x.MajorName)
                 .ToList();
+
+            // Materialize plain Major instances in-memory from the projected rows.
+            var result = rows.Select(r => new Major
+            {
+                MajorId = r.MajorId,
+                MajorName = r.MajorName,
+                AlternativeMajorName = r.AlternativeMajorName,
+                MajorCode = r.MajorCode,
+                TenNganh = r.TenNganh,
+                FacultyId = r.FacultyId,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                IsDeleted = r.IsDeleted
+            }).ToList();
+
+            return result;
         }
 
 
@@ -86,6 +128,8 @@ namespace SIMS.Data
         public AcademicProgram GetAcademicProgramById(int programId) // Lấy chương trình học theo ID
         {
             return _context.AcademicPrograms
+                .Include(f => f.Faculty)
+                .Include(m => m.Major)
                 .AsNoTracking()
                 .FirstOrDefault(p => p.AcademicProgramId == programId) ?? new AcademicProgram();  
         }
@@ -163,6 +207,14 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }
 
+        // Add this method into the existing DatabaseHelper class.
+        public bool AddCurriculum(Curriculum curriculum)
+        {
+            if (curriculum == null) return false;
+            _context.Curriculum.Add(curriculum);
+            return _context.SaveChanges() > 0;
+        }
+
         public bool RemoveStudent(int studentId) // Xóa sinh viên theo ID
         {
             var student = _context.Students.Find(studentId);
@@ -196,6 +248,7 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }   
 
+
         public bool RemoveAcademicProgram(int programId) // Xóa chương trình học theo ID
         {
             var program = _context.AcademicPrograms.Find(programId);
@@ -218,7 +271,7 @@ namespace SIMS.Data
             return _context.SaveChanges() > 0;
         }
 
-        public bool RemoveMajor(int majorId) // Xóa ngành theo ID
+        public bool RemoveMajor(int majorId) // Xóa ngành mới
         {
             var major = _context.Majors.Find(majorId);
             if (major == null)
@@ -251,11 +304,21 @@ namespace SIMS.Data
                 return false;
             }
             existingCourse.CourseName = course.CourseName;
-            
+            existingCourse.CourseCode = course.CourseCode;
+            existingCourse.TenHocPhan = course.TenHocPhan;
+            existingCourse.FacultyId = course.FacultyId;
+            existingCourse.LectureCredits = course.LectureCredits;
+            existingCourse.PracticalCredits = course.PracticalCredits;
+            existingCourse.InternshipCredits = course.InternshipCredits;
+            existingCourse.CapstoneCredits = course.CapstoneCredits;
+            existingCourse.CourseSummary = course.CourseSummary;
+
+
             _context.SaveChanges();
             return true;
         }
 
+        // Updated: update full academic program fields
         public bool UpdateAcademicProgram(AcademicProgram program) // Cập nhật thông tin chương trình học
         {
             var existingProgram = _context.AcademicPrograms.Find(program.AcademicProgramId);
@@ -263,8 +326,18 @@ namespace SIMS.Data
             {
                 return false;
             }
+
             existingProgram.AcademicProgramName = program.AcademicProgramName;
-            
+            existingProgram.MajorId = program.MajorId;
+            existingProgram.FacultyId = program.FacultyId;
+            existingProgram.Language = program.Language;
+            existingProgram.Description = program.Description;
+            existingProgram.NumberOfSemester = program.NumberOfSemester;
+            existingProgram.ObligatedCredits = program.ObligatedCredits;
+            existingProgram.ElectiveCredits = program.ElectiveCredits;
+            existingProgram.TotalOfRequiredCredits = (program.ObligatedCredits ?? 0m) + (program.ElectiveCredits ?? 0m);
+            existingProgram.UpdatedAt = DateTime.Now;
+
             _context.SaveChanges();
             return true;
         }
@@ -327,14 +400,156 @@ namespace SIMS.Data
 
         public IQueryable<Course> GetCourses()
         {
-            return _context.Courses;
+            // Ensure Faculty navigation is available to callers so views / APIs can use Faculty.FacultyName
+            return _context.Courses.Include(c => c.Faculty);
         }
 
         public Course GetCourseById(int courseId)
         {
             return _context.Courses
                 .AsNoTracking()
+                .Include(c => c.Faculty)
                 .FirstOrDefault(c => c.CourseId == courseId) ?? new Course();
+        }
+
+        // Lấy tất cả các giáo trình / khung chương trình (Curriculum)
+        public List<Curriculum> GetAllCurriculums()
+        {
+            return _context.Curriculum
+                .Include(c => c.Program)
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .OrderBy(c => c.CurriculumId)
+                .ToList();
+        }
+
+        // Lấy curriculum theo ID
+        public Curriculum GetCurriculumById(int curriculumId)
+        {
+            return _context.Curriculum
+                .Include(c => c.Program)
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .FirstOrDefault(c => c.CurriculumId == curriculumId) ?? new Curriculum();
+        }
+
+        // Lấy các curriculum theo ProgramId
+        /// <summary>
+        /// Lấy tất cả các chương trình học theo một ProgramId cụ thể
+        /// </summary>
+        /// <param name="programId"></param>
+        /// <returns></returns>
+        public List<Curriculum> GetAllCurriculumsByProgramId(int programId)
+        {
+            return _context.Curriculum
+                .Include(c => c.Course)
+                .AsNoTracking()
+                .Where(c => c.ProgramId == programId)
+                .OrderBy(c => c.CurriculumId)
+                .ToList();
+        }
+
+        // Lấy tất cả các CourseDependency
+        public List<CourseDependency> GetAllCourseDependencies()
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.Curriculum)
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .OrderBy(cd => cd.CourseDependencyId)
+                .ToList();
+        }
+
+        // Lấy tất cả CourseDependency theo CurriculumId
+        public List<CourseDependency> GetAllCourseDependenciesByCurriculumId(int curriculumId)
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .Where(cd => cd.CurriculumId == curriculumId)
+                .OrderBy(cd => cd.CourseDependencyId)
+                .ToList();
+        }
+
+        // Lấy CourseDependency theo ID
+        public CourseDependency GetCourseDependencyById(int courseDependencyId)
+        {
+            return _context.CourseDependencyies
+                .Include(cd => cd.Curriculum)
+                .Include(cd => cd.PreviousCourse)
+                .Include(cd => cd.CorequisiteCourse)
+                .Include(cd => cd.PrerequisiteCourse)
+                .AsNoTracking()
+                .FirstOrDefault(cd => cd.CourseDependencyId == courseDependencyId) ?? new CourseDependency();
+        }
+
+        // Add this method inside the existing DatabaseHelper class.
+        //public bool RemoveCurriculum(int curriculumId)
+        //{
+        //    // Guard
+        //    if (curriculumId <= 0) return false;
+
+        //    // Try find the curriculum
+        //    var curriculum = _context.Curriculum.Find(curriculumId);
+        //    if (curriculum == null) return false;
+
+        //    // Prefer soft-delete if the column exists; fallback to physical delete.
+        //    try
+        //    {
+        //        // If a soft-delete column is present, mark it and update timestamp
+        //        if (curriculum.GetType().GetProperty("IsDeleted") != null)
+        //        {
+        //            curriculum.IsDeleted = true;
+        //            curriculum.UpdatedAt = DateTime.Now;
+        //            _context.Entry(curriculum).State = EntityState.Modified;
+        //        }
+        //        else
+        //        {
+        //            _context.Curriculum.Remove(curriculum);
+        //        }
+
+        //        return _context.SaveChanges() > 0;
+        //    }
+        //    catch
+        //    {
+        //        return false;
+        //    }
+        //    _context.Curriculum.Remove(curriculum);
+        //    return _context.SaveChanges() > 0;
+
+
+        //}
+
+        public bool RemoveCurriculum(int curriculumId)
+        {
+            // Guard
+            if (curriculumId <= 0) return false;
+
+            // Try find the curriculum
+            var curriculum = _context.Curriculum.Find(curriculumId);
+
+            // Nếu không tìm thấy, coi như đã 'xóa' (hoặc không cần làm gì)
+            if (curriculum == null) return false;
+
+            try
+            {
+                // ➡️ THỰC HIỆN XÓA CỨNG: Loại bỏ đối tượng khỏi Context
+                // Điều này sẽ tạo ra lệnh DELETE trong cơ sở dữ liệu
+                _context.Curriculum.Remove(curriculum);
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                return _context.SaveChanges() > 0;
+            }
+            catch (Exception ex)
+            {
+                // Ghi log (nên thêm logic ghi log thực tế ở đây)
+                // Ví dụ: Console.WriteLine(ex.Message);
+                return false;
+            }
         }
 
     }

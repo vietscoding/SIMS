@@ -1,0 +1,540 @@
+﻿@model SIMS.ViewModels.AcademicProgramDetailViewModel
+
+@{
+    Layout = "_AdminLayout";
+}
+<div style="margin-left:1vw;">
+    <h2>Program Detail</h2>
+    <a href="@Url.Action("AcademicProgram", "AcademicProgram")" style="color:gray" ><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" /></svg> Back to Programs</a><br />
+    <div class="actionBtnBox" style="margin-left: 1vh;">
+        <button id="filterCoursesInProgramBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh; margin-top:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z" /></svg> Filter Courses in this Program</button>
+        <button id="addCourseToProgramBtn" class="btn btn-success" style="margin-bottom: 1vh; margin-top:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z" /></svg> Add a Course to this Program</button>
+        <button id="editProgramInfoBtn" class="btn btn-warning" style="margin-bottom: 1vh; margin-top:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" /></svg> Edit this Program info</button>
+        <button id="deleteProgramBtn" class="btn btn-danger" style="margin-bottom: 1vh; margin-top:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" /></svg> Delete this Program</button>
+        <hr />
+    </div>
+
+    <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+        <h4>Program: @Model.AcademicProgram.AcademicProgramName</h4>
+        <button data-toggle="collapse" class="btn btn-secondary btn-sm" data-target="#programDetailBox">Show / Hide detail</button>
+        <div id="programDetailBox" class="collapse" style="margin-top: 1vh">
+            <p><b>Program Id:</b> @Model.AcademicProgram.AcademicProgramId</p>
+            <p><b>Major:</b> @Model.AcademicProgram.Major?.MajorName</p>
+            <p><b>Faculty in charge:</b> @Model.AcademicProgram.Faculty?.FacultyName</p>
+            <p><b>Program Language:</b> @Model.AcademicProgram.Language</p>
+            <p><b>Description:</b> @Model.AcademicProgram.Description</p>
+            <p><b>Number of semesters:</b> @Model.AcademicProgram.NumberOfSemester</p>
+            <p><b>Obligated credits:</b> @Model.AcademicProgram.ObligatedCredits</p>
+            <p><b>Elective credits:</b> @Model.AcademicProgram.ElectiveCredits</p>
+            <p><b>Total credits:</b> @Model.AcademicProgram.TotalOfRequiredCredits</p>
+        </div>
+
+    </div>
+
+    <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Semester</th>
+                    <th>Course Id</th>
+                    <th>Course Name</th>
+                    <th>Course Code</th>
+                    <th>Credits</th>
+                    <th>Is Elective</th>
+                    <th title="Is Before Capstone Project">Is BCP</th>
+                    <th title="Is Prerequisite Capstone Project">Is PCP</th>
+                    <th>Previous</th>
+                    <th>Parallel</th>
+                    <th>Prerequisite</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int stt = 1;
+                }
+                @foreach (var c in Model.Curriculums)
+                {
+                    // find dependencies for this curriculum
+                    var deps = Model.CourseDependencies?.Where(cd => cd.CurriculumId == c.CurriculumId).ToList() ?? new List<SIMS.Models.CourseDependency>();
+                    var previousNames = deps.Where(d => d.PreviousCourse != null).Select(d => d.PreviousCourse.CourseName).Where(n => !string.IsNullOrEmpty(n)).Distinct();
+                    var coreqNames = deps.Where(d => d.CorequisiteCourse != null).Select(d => d.CorequisiteCourse.CourseName).Where(n => !string.IsNullOrEmpty(n)).Distinct();
+                    var prereqNames = deps.Where(d => d.PrerequisiteCourse != null).Select(d => d.PrerequisiteCourse.CourseName).Where(n => !string.IsNullOrEmpty(n)).Distinct();
+                
+                    <tr>
+                        <td>@stt</td>
+                        <td>1</td>
+                        <td>@c.CourseId</td>
+                        <td>@c.Course?.CourseName</td>
+                        <td>@c.Course?.CourseCode</td>
+                        <td>@c.Course?.TotalCredits</td>
+                        @if (c.IsElective == true)
+                        {
+                            <td>✓</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                        @if (c.IsBeforeCapstoneProject == true)
+                        {
+                            <td>✓</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                        @if (c.IsPrerequisiteCapstoneProject == true)
+                        {
+                            <td>✓</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                        <td>@(previousNames.Any() ? string.Join(", ", previousNames) : "")</td>
+                        <td>@(coreqNames.Any() ? string.Join(", ", coreqNames) : "")</td>
+                        <td>@(prereqNames.Any() ? string.Join(", ", prereqNames) : "")</td>
+                        <td>
+                            <button id="update-curriculum-btn" class="btn btn-warning btn-sm view-details" data-id="@c.CurriculumId"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" /></svg> Edit</button>
+                            <button id="delete-curriculum-btn" class="btn btn-danger btn-sm view-details" data-id="@c.CurriculumId"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" /></svg> Delete</button>
+                        </td>
+                    </tr>
+                    stt++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* Add Course To Program Modal *@
+<div id="addCourseToProgramModal" class="user-modal" style="display:none;">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeAddCourseToProgramModal">&times;</span>
+        <h3>Add Course (Curriculum) to Program</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-12">
+                <label for="addCourseIdInput" class="form-label">Course Id</label>
+                <input type="number"
+                       class="form-control"
+                       id="addCourseIdInput"
+                       placeholder="Required a 'Course ID' not a 'Course Code'" />
+                <div class="invalid-feedback" id="addCourseIdInvalid" style="display:none;"></div>
+            </div>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="addCourseConfirmBtn" type="button" class="btn btn-success" disabled>Add</button>
+                <button id="cancelAddCourseBtn" type="button" class="btn btn-outline-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Update Program Modal (similar behavior to Update Course modal) *@
+<div id="updateProgramModal" class="user-modal" style="display:none;">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeUpdateProgramModal">&times;</span>
+        <h3>Update Program Info</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-4">
+                <label for="updateProgramId" class="form-label">Program Id</label>
+                <input type="text" class="form-control" id="updateProgramId" readonly value="@Model.AcademicProgram.AcademicProgramId" />
+            </div>
+
+            <div class="col-md-8">
+                <label for="updateProgramName" class="form-label">Program Name</label>
+                <input type="text" class="form-control" id="updateProgramName" value="@(Model.AcademicProgram.AcademicProgramName ?? "")" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="updateMajorName" class="form-label">Major</label>
+                <input type="text" class="form-control" id="updateMajorName" list="majorList" value="@(Model.AcademicProgram.Major?.MajorName ?? "")" />
+                <datalist id="majorList">
+                    @{
+                        var majors = Model.Majors;
+                        if (majors != null)
+                        {
+                            foreach (var m in majors)
+                            {
+                                <option data-id="@m.MajorId" value="@m.MajorName"></option>
+                            }
+                        }
+                    }
+                </datalist>
+                <input type="hidden" id="updateMajorId" value="@(Model.AcademicProgram.MajorId ?? 0)" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="updateFacultyName" class="form-label">Faculty in charge</label>
+                <input type="text" class="form-control" id="updateFacultyName" list="facultyList" value="@(Model.AcademicProgram.Faculty?.FacultyName ?? "")" />
+                <datalist id="facultyList">
+                    @{
+                        var faculties = Model.Faculties;
+                        if (faculties != null)
+                        {
+                            foreach (var f in faculties)
+                            {
+                                <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
+                            }
+                        }
+                    }
+                </datalist>
+                <input type="hidden" id="updateFacultyId" value="@(Model.AcademicProgram.FacultyId ?? 0)" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="updateLanguage" class="form-label">Program Language</label>
+                <input type="text" class="form-control" id="updateLanguage" value="@(Model.AcademicProgram.Language ?? "")" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="updateNumberOfSemester" class="form-label">Number of Semesters</label>
+                <input type="number" class="form-control" id="updateNumberOfSemester" min="0" value="@(Model.AcademicProgram.NumberOfSemester ?? 0)" />
+            </div>
+
+            <div class="col-md-5">
+                <label for="updateObligatedCredits" class="form-label">Obligated Credits</label>
+                <input type="number" step="0.5" class="form-control" id="updateObligatedCredits" value="@(Model.AcademicProgram.ObligatedCredits ?? 0)" />
+            </div>
+
+            <div class="col-md-5">
+                <label for="updateElectiveCredits" class="form-label">Elective Credits</label>
+                <input type="number" step="0.5" class="form-control" id="updateElectiveCredits" value="@(Model.AcademicProgram.ElectiveCredits ?? 0)" />
+            </div>
+            <div class="col-md-2">
+                <label for="updateTotalOfRequiredCredits" class="form-label">Total</label>
+                <input type="number" class="form-control" id="updateTotalOfRequiredCredits" readonly value="@(Model.AcademicProgram.TotalOfRequiredCredits ?? 0)" />
+            </div>
+
+            <div class="col-md-12">
+                <label for="updateDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="updateDescription">@Model.AcademicProgram.Description</textarea>
+            </div>
+
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="updateProgramBtn" type="button" class="btn btn-warning">Update</button>
+                <button id="cancelUpdateProgramBtn" type="button" class="btn btn-outline-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Utility: find datalist option's data-id by value
+            function datalistSelectedId(datalistSelector, value) {
+                if (!value) return null;
+                var found = $(datalistSelector + " option").filter(function () {
+                    return $(this).val() === value;
+                }).first();
+                return found.length ? found.data("id") : null;
+            }
+
+            // Show update modal
+            $('#editProgramInfoBtn').on('click', function () {
+                // Show modal (inputs already populated server-side)
+                $('#updateProgramModal').css('display', 'flex');
+
+                // Ensure hidden ids reflect datalist selections if possible
+                var majorVal = $('#updateMajorName').val()?.toString().trim() || '';
+                var majorId = datalistSelectedId('#majorList', majorVal);
+                if (majorId) $('#updateMajorId').val(majorId);
+
+                var facultyVal = $('#updateFacultyName').val()?.toString().trim() || '';
+                var facultyId = datalistSelectedId('#facultyList', facultyVal);
+                if (facultyId) $('#updateFacultyId').val(facultyId);
+            });
+
+            // Thêm vào document.ready
+            $('#updateMajorName').on('input change', function() {
+                var val = $(this).val();
+                var id = datalistSelectedId('#majorList', val);
+                $('#updateMajorId').val(id || 0); // Đặt ID là 0 nếu không tìm thấy (hoặc null tùy logic backend)
+            });
+
+            $('#updateFacultyName').on('input change', function() {
+                var val = $(this).val();
+                var id = datalistSelectedId('#facultyList', val);
+                $('#updateFacultyId').val(id || 0);
+            });
+            // Close handlers
+            $('#closeUpdateProgramModal, #cancelUpdateProgramBtn').on('click', function () {
+                $('#updateProgramModal').hide();
+            });
+
+            // Recompute total credits client-side when obligated/elective change
+            function recomputeTotalCredits() {
+                var obligated = parseFloat($('#updateObligatedCredits').val() || 0) || 0;
+                var elective = parseFloat($('#updateElectiveCredits').val() || 0) || 0;
+                $('#updateTotalOfRequiredCredits').val(obligated + elective);
+            }
+            $('#updateObligatedCredits, #updateElectiveCredits').on('input change', recomputeTotalCredits);
+
+            // Simple client-side validation + enable Update button only when required fields are present
+            function validateProgramModal() {
+                var name = $('#updateProgramName').val()?.toString().trim() || '';
+                return name.length > 0;
+            }
+
+            // Enable/disable update button based on validation
+            $('#updateProgramModal input, #updateProgramModal textarea').on('input change', function () {
+                $('#updateProgramBtn').prop('disabled', !validateProgramModal());
+            });
+            // initialize state
+            $('#updateProgramBtn').prop('disabled', !validateProgramModal());
+
+            // Update handler: send payload to server (adjust URL to match your controller action)
+            $('#updateProgramBtn').on('click', function () {
+                if (!validateProgramModal()) {
+                    alert('Please enter a valid Program Name.');
+                    return;
+                }
+
+                var payload = {
+                    academicProgramId: parseInt($('#updateProgramId').val() || 0),
+                    academicProgramName: $('#updateProgramName').val()?.toString().trim() || '',
+                    majorId: parseInt($('#updateMajorId').val() || 0) || null,
+                    facultyId: parseInt($('#updateFacultyId').val() || 0) || null,
+                    language: $('#updateLanguage').val()?.toString().trim() || '',
+                    description: $('#updateDescription').val()?.toString().trim() || '',
+                    numberOfSemester: parseInt($('#updateNumberOfSemester').val() || 0) || null,
+                    obligatedCredits: parseFloat($('#updateObligatedCredits').val() || 0) || null,
+                    electiveCredits: parseFloat($('#updateElectiveCredits').val() || 0) || null
+                };
+
+                // Disable button while request in-flight
+                $('#updateProgramBtn').prop('disabled', true).text('Updating...');
+
+                // NOTE: adjust the URL to the correct action in your app that accepts this payload.
+                $.ajax({
+                    url: '/AcademicProgram/UpdateAcademicProgram',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        // Expecting { success: true } or similar. Adapt to your API response.
+                        if (res && res.success) {
+                            // update the programDetailBox quickly on client to reflect changes
+                            if (payload.majorId && $('#majorList option[data-id="' + payload.majorId + '"]').length) {
+                                var majName = $('#majorList option[data-id="' + payload.majorId + '"]').val();
+                                $('div#programDetailBox p:contains("Major:")').html('<b>Major:</b> ' + majName);
+                            } else {
+                                $('div#programDetailBox p:contains("Major:")').html('<b>Major:</b> ' + ($('#updateMajorName').val() || ''));
+                            }
+                            $('div#programDetailBox p:contains("Program Name:")').html('<b>Program Name:</b> ' + payload.academicProgramName);
+                            $('div#programDetailBox p:contains("Program Language:")').html('<b>Program Language:</b> ' + payload.language);
+                            $('div#programDetailBox p:contains("Description:")').html('<b>Description:</b> ' + payload.description);
+                            $('div#programDetailBox p:contains("Number of semesters:")').html('<b>Number of semesters:</b> ' + (payload.numberOfSemester ?? ''));
+                            $('div#programDetailBox p:contains("Obligated credits:")').html('<b>Obligated credits:</b> ' + (payload.obligatedCredits ?? ''));
+                            $('div#programDetailBox p:contains("Elective credits:")').html('<b>Elective credits:</b> ' + (payload.electiveCredits ?? ''));
+                            var total = (payload.obligatedCredits || 0) + (payload.electiveCredits || 0);
+                            $('div#programDetailBox p:contains("Total credits:")').html('<b>Total credits:</b> ' + total);
+                            $('#updateProgramModal').hide();
+                            alert(res.message || 'Program updated successfully.');
+                        } else {
+                            var msg = (res && res.message) ? res.message : 'Failed to update program.';
+                            alert(msg);
+                        }
+                    },
+                    error: function () {
+                        alert('Server error while updating program. Please try again later.');
+                    },
+                    complete: function () {
+                        $('#updateProgramBtn').prop('disabled', false).text('Update');
+                    }
+                });
+            });
+
+            $('#deleteProgramBtn').on('click', function () {
+                if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
+                    return;
+                }
+                var $btn = $(this);
+                var programId = @(Model.AcademicProgram.AcademicProgramId);
+                $btn.prop('disabled', true).text('Deleting...');
+
+                $.ajax({
+                    url: '/AcademicProgram/DeleteAcademicProgram',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(programId),
+                    success: function (res) {
+                        if (res && res.success) {
+                            alert('Program deleted successfully.');
+                            window.location.href = '/AcademicProgram/AcademicProgram';
+                        } else {
+                            var msg = (res && res.message) ? res.message : 'Failed to delete program.';
+                            alert(msg);
+                        }
+                    },
+                    error: function (xhr) {
+                        var parsed = null;
+                        try { parsed = JSON.parse(xhr.responseText || "{}"); } catch { }
+                        var msg = (parsed && parsed.message) ? parsed.message : 'Server error while deleting program.';
+                        alert(msg);
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false).text('Delete this Program');
+                    }
+                });
+            });
+
+            // Add Course to Program modal handlers
+            (function() {
+                var $modal = $('#addCourseToProgramModal');
+                var $input = $('#addCourseIdInput');
+                var $addBtn = $('#addCourseConfirmBtn');
+                var $invalid = $('#addCourseIdInvalid');
+                var programId = @(Model.AcademicProgram.AcademicProgramId);
+
+                function showAddModal() {
+                    $input.val('');
+                    $addBtn.prop('disabled', true);
+                    $invalid.hide().text('');
+                    $input.removeClass('is-invalid');
+                    $modal.css('display', 'flex');
+                    $input.focus();
+                }
+
+                function hideAddModal() {
+                    $modal.hide();
+                }
+
+                function validateCourseId(value) {
+                    if (!value) return false;
+                    var trimmed = value.toString().trim();
+                    var ok = /^\d+$/.test(trimmed) && parseInt(trimmed, 10) > 0;
+                    if (!ok) {
+                        $invalid.show().text('Course Id must be a positive integer');
+                        $input.addClass('is-invalid');
+                    } else {
+                        $invalid.hide().text('');
+                        $input.removeClass('is-invalid');
+                    }
+                    return ok;
+                }
+
+                $('#addCourseToProgramBtn').on('click', function() {
+                    showAddModal();
+                });
+
+                $('#closeAddCourseToProgramModal, #cancelAddCourseBtn').on('click', function() {
+                    hideAddModal();
+                });
+
+                // Close when clicking outside content
+                $(document).on('click', '#addCourseToProgramModal', function (e) {
+                    if (e.target === this) $(this).hide();
+                });
+
+                $input.on('input change', function() {
+                    var val = $(this).val()?.toString().trim() || '';
+                    var ok = validateCourseId(val);
+                    $addBtn.prop('disabled', !ok);
+                });
+
+                $addBtn.on('click', function() {
+                    var val = $input.val()?.toString().trim() || '';
+                    if (!validateCourseId(val)) {
+                        return;
+                    }
+
+                    var payload = {
+                        programId: programId,
+                        courseId: parseInt(val, 10)
+                    };
+
+                    $addBtn.prop('disabled', true).text('Adding...');
+
+                    // NOTE: implement server endpoint to accept this payload, e.g. ProgramDetailController.AddCurriculum
+                    $.ajax({
+                        url: '/ProgramDetail/AddCurriculum', // adjust if your controller uses a different route
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(payload),
+                        success: function(res) {
+                            if (res && res.success) {
+                                alert(res.message || 'Course added to program.');
+                                hideAddModal();
+                                // reload to reflect new curriculum row
+                                location.reload();
+                            } else {
+                                var msg = (res && res.message) ? res.message : 'Failed to add course to program.';
+                                alert(msg);
+                            }
+                        },
+                        error: function(xhr) {
+                            var parsed = null;
+                            try { parsed = JSON.parse(xhr.responseText || "{}"); } catch {}
+                            var msg = (parsed && parsed.message) ? parsed.message : 'Server error while adding course to program.';
+                            alert(msg);
+                        },
+                        complete: function() {
+                            $addBtn.prop('disabled', false).text('Add');
+                        }
+                    });
+                });
+            })();
+            
+            // Delete curriculum handler for per-row Delete buttons
+            $(document).on('click', '#delete-curriculum-btn', function (e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var curriculumId = $btn.data('id');
+                if (!curriculumId || parseInt(curriculumId, 10) <= 0) {
+                    alert('Invalid curriculum identifier.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this curriculum from the program? This action cannot be undone.')) {
+                    return;
+                }
+
+                // Preserve original html (icon + text) so we can restore it
+                var originalHtml = $btn.data('orig-html');
+                if (!originalHtml) {
+                    originalHtml = $btn.html();
+                    $btn.data('orig-html', originalHtml);
+                }
+                $btn.prop('disabled', true).html('Deleting...');
+
+                $.ajax({
+                    url: '/ProgramDetail/DeleteCurriculum',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(curriculumId),
+                    success: function (res) {
+                        if (res && res.success) {
+                            // remove the row from the table to reflect deletion
+                            $btn.closest('tr').fadeOut(180, function () { $(this).remove(); });
+                            alert(res.message || 'Curriculum removed from program.');
+                        } else {
+                            var msg = (res && res.message) ? res.message : 'Failed to delete curriculum.';
+                            alert(msg);
+                        }
+                    },
+                    error: function (xhr) {
+                        var parsed = null;
+                        try { parsed = JSON.parse(xhr.responseText || "{}"); } catch { }
+                        var msg = (parsed && parsed.message) ? parsed.message : 'Server error while deleting curriculum.';
+                        alert(msg);
+                    },
+                    complete: function () {
+                        // restore button state (if row still present)
+                        $btn.prop('disabled', false).html($btn.data('orig-html') || 'Delete');
+                    }
+                });
+            });
+
+            // Close modal when clicking outside the content
+            $(document).on('click', '#updateProgramModal', function (e) {
+                if (e.target === this) $(this).hide();
+            });
+        });
+    </script>
+}

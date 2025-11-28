@@ -3,33 +3,28 @@
 @{
     Layout = "_AdminLayout";
 }
-
-<h2>Courses List</h2>
+<div style="margin-left:1vw;">
 <div class="actionBtnBox">
-    <form></form>
-    <button id="searchCourseBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;">Search</button>
-    <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh;">Filter</button>
-    <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-bottom: 1vh;">Add</button>
-    <button id="editCourseBtn" type="button" class="btn btn-warning" style="margin-bottom: 1vh;">Edit</button>
-    <button id="deleteCourseBtn" type="button" class="btn btn-danger" style="margin-bottom: 1vh;">Delete</button>
+    <h2>Courses List</h2>
+        <button id="filterBtn" type="button" class="btn btn-primary" style="margin-right:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z" /></svg> Filter Courses</button>
+        <button id="addCourseBtn" type="button" class="btn btn-success" style="margin-right:1vh"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z" /></svg> Add a New Course</button>
+    <hr />
 </div>
-
 <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
-
     <table class="table table-striped table-bordered">
         <thead>
             <tr>
                 <th>Action</th>
-                <th>STT</th>
-                <th>Course ID</th>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Faculty in charge</th>
-                <th>Total Credits</th>
-                <th>Lecture Credits</th>
-                <th>Practical Credits</th>
-                <th>Internship Credits</th>
-                <th>Capstone Credits</th>
+                <th>No.</th>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Faculty</th>
+                <th>Total</th>
+                <th>Lecture</th>
+                <th>Practical</th>
+                <th>Internship</th>
+                <th>Capstone</th>
                 <th>Summary</th>
             </tr>
         </thead>
@@ -51,26 +46,162 @@
                         </a>
                     </td>
                     <td>@c.CourseName</td>
-                    <td>@(c.Faculty?.FacultyName ?? (c.FacultyId?.ToString() ?? "N/A"))</td>
-                    <td>
-                        @(
-                            c.TotalCredits.HasValue
-                                ? c.TotalCredits.Value.ToString()
-                                : ((c.LectureCredits ?? 0m) + (c.PracticalCredits ?? 0m) + (c.InternshipCredits ?? 0m) + (c.CapstoneCredits ?? 0m)).ToString()
-                        )
-                    </td>
+                    @{
+                        var facultyName = c.Faculty?.FacultyName;
+                        if (string.IsNullOrWhiteSpace(facultyName))
+                        {
+                            <td><em>Not set yet</em></td>
+                        }
+                        else
+                        {
+                            <td>@facultyName</td>
+                        }
+                    }
+                    
+                    @{
+
+                        decimal? totalCredits = c.LectureCredits + c.PracticalCredits + c.CapstoneCredits;
+                    }
+                    <td>@totalCredits</td>
                     <td>@c.LectureCredits</td>
                     <td>@c.PracticalCredits</td>
                     <td>@c.InternshipCredits</td>
                     <td>@c.CapstoneCredits</td>
-                    <td>@c.CourseSummary</td>
+                    <td>
+                        @if (string.IsNullOrEmpty(c.CourseSummary))
+                        {
+                            @Html.Raw("<em>Not set yet</em>")
+                        }
+                        else
+                        {
+                            @c.CourseSummary
+                        }
+                    </td>
                 </tr>
-                 stt++;
+                stt++;
             }
-
         </tbody>
     </table>
+</div>
+</div>
+@* Add New Course Modal*@
+<div id="addCourseModal" class="user-modal">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeAddCourseModal">&times;</span>
+        <h3>Add New Course</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-6">
+                <label for="courseName" class="form-label">Course Name</label>
+                <input type="text"
+                       class="form-control"
+                       id="courseName"
+                       placeholder="(e.g., Discrete Mathematics)" />
+            </div>
+            <div class="col-md-6">
+                <label for="tenHocPhan" class="form-label">Tên Học Phần</label>
+                <input type="text"
+                       class="form-control"
+                       id="tenHocPhan"
+                       placeholder="(v.d., Toán Rời Rạc)" />
+            </div>
 
+            <div class="col-md-6">
+                <label for="courseCode" class="form-label">Course Code</label>
+                <input type="text"
+                       class="form-control"
+                       id="courseCode"
+                       placeholder="Exactly 7 digits (e.g., 1234567)"
+                       maxlength="7"
+                       pattern="[0-9]{7}" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="facultyInCharge" class="form-label">Faculty in charge</label>
+                <input type="text"
+                       class="form-control"
+                       id="facultyInCharge"
+                       list="facultyInChargeList"
+                       placeholder="(e.g., Faculty of Information Technology)" />
+                <datalist id="facultyInChargeList">
+                    @{
+                        var faculties = ViewBag.Faculties as List<Faculty>;
+                        foreach (var f in faculties)
+                        {
+                            <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
+                        }
+                    }
+
+                </datalist>
+                <input type="hidden" id="facultyId" name="facultyId" value="" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="lectureCredits" class="form-label">Lecture Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="lectureCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="practicalCredits" class="form-label">Practical Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="practicalCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="internshipCredits" class="form-label">Internship Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="internshipCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="capstoneCredits" class="form-label">Capstone Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="capstoneCredits"
+                       placeholder="(e.g., 2.0)"
+                       value="0"
+                       min="0"
+                       step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="totalCredits" class="form-label">Total Credits</label>
+                <input type="number"
+                       class="form-control"
+                       id="totalCredits"
+                       readonly
+                       placeholder="Readonly field" />
+            </div>
+
+            <div class="col-md-9">
+                <label for="courseSummary" class="form-label">Course Summary</label>
+                <input type="text"
+                       class="form-control"
+                       id="courseSummary"
+                       placeholder="A meaningful description about this course..." />
+            </div>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="addNewCourseBtn" type="button" class="btn btn-success">Add</button>
+                <button id="cancelAddNewCourseBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @* Filter Modal *@
@@ -79,21 +210,22 @@
         <span class="close-modal" id="closeFilterModal">&times;</span>
         <h3>Filter Courses</h3>
         <div class="row g-3" style="margin-top:12px;">
+
             <div class="col-md-6">
                 <label for="filterName" class="form-label">Course name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
+
             <div class="col-md-6">
                 <label for="filterCode" class="form-label">Course code contains</label>
                 <input type="text" class="form-control" id="filterCode" />
             </div>
-
+        
             <div class="col-md-6">
                 <label for="filterFacultyId" class="form-label">Faculty in charge</label>
-                <select id="filterFacultyId" class="form-select">
+                <select class="form-select" id="filterFacultyId">
                     <option value="">Any</option>
                     @{
-                        var faculties = ViewBag.Faculties as List<Faculty>;
                         if (faculties != null)
                         {
                             foreach (var f in faculties)
@@ -107,340 +239,264 @@
 
             <div class="col-md-3">
                 <label class="form-label">Lecture Credits (min)</label>
-                <input type="number" step="0.5" min="0" id="filterLectureMin" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterLectureMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Lecture Credits (max)</label>
-                <input type="number" step="0.5" min="0" id="filterLectureMax" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterLectureMax" />
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Practical Credits (min)</label>
-                <input type="number" step="0.5" min="0" id="filterPracticalMin" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterPracticalMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Practical Credits (max)</label>
-                <input type="number" step="0.5" min="0" id="filterPracticalMax" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterPracticalMax" />
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Internship Credits (min)</label>
-                <input type="number" step="0.5" min="0" id="filterInternshipMin" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterInternshipMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Internship Credits (max)</label>
-                <input type="number" step="0.5" min="0" id="filterInternshipMax" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterInternshipMax" />
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Capstone Credits (min)</label>
-                <input type="number" step="0.5" min="0" id="filterCapstoneMin" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterCapstoneMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Capstone Credits (max)</label>
-                <input type="number" step="0.5" min="0" id="filterCapstoneMax" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterCapstoneMax" />
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Total Credits (min)</label>
-                <input type="number" step="0.5" min="0" id="filterTotalMin" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMin" />
             </div>
+
             <div class="col-md-3">
                 <label class="form-label">Total Credits (max)</label>
-                <input type="number" step="0.5" min="0" id="filterTotalMax" class="form-control" />
+                <input type="number" step="0.5" min="0" class="form-control" id="filterTotalMax" />
             </div>
 
             <div class="col-md-12">
-                <label for="filterSummary" class="form-label">Course summary contains</label>
-                <input type="text" class="form-control" id="filterSummary" />
+                <label for="filterSummary" class="form-label">Course Summary</label>
+                <input type="text" class="form-control" id="filterSummary" />   
             </div>
 
-            <div class="col-12" style="margin-top:8px;">
+            <div class="col-12" style="margin-top:20px;">
                 <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
                 <button id="clearFilterBtn" type="button" class="btn btn-outline-secondary">Clear</button>
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Course Details Modal -->
-<div class="modal fade" id="courseDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Course Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+@* Update Course Modal*@
+<div id="updateCourseModal" class="user-modal">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeUpdateCourseModal">&times;</span>
+        <h3>Update Course</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-6">
+                <label for="updateCourseId" class="form-label">Course Id</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateCourseId" 
+                        readonly />
             </div>
 
-            <div class="modal-body">
-                <div id="course-details-loading" style="text-align:center; padding:20px;">
-                    Loading...
-                </div>
-
-                <div id="course-details-content" style="display:none;">
-                    <p><strong>Course ID:</strong> <span id="detail-course-id"></span></p>
-                    <p><strong>Code:</strong> <span id="detail-course-code"></span></p>
-                    <p><strong>Name:</strong> <span id="detail-course-name"></span></p>
-                    <p><strong>Faculty in charge:</strong> <span id="detail-faculty-id"></span></p>
-                    <p><strong>Total Credits:</strong> <span id="detail-total-credits"></span></p>
-                    <p><strong>Lecture:</strong> <span id="detail-lecture-credits"></span></p>
-                    <p><strong>Practical:</strong> <span id="detail-practical-credits"></span></p>
-                    <p><strong>Internship:</strong> <span id="detail-internship-credits"></span></p>
-                    <p><strong>Capstone:</strong> <span id="detail-capstone-credits"></span></p>
-                    <p><strong>Summary:</strong> <span id="detail-summary"></span></p>
-                </div>
+            <div class="col-md-6">
+                <label for="updateCourseCode" class="form-label">Course Code</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateCourseCode"
+                        maxlength="7"
+                        pattern="[0-9]{7}" />
+            </div>
+            <div class="col-md-6">
+                <label for="updateCourseName" class="form-label">Course Name</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateCourseName" />
+            </div>
+            <div class="col-md-6">
+                <label for="updateTenHocPhan" class="form-label">Tên Học Phần</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateTenHocPhan" />
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="col-md-12">
+                <label for="updateFacultyInCharge" class="form-label">Faculty in charge</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateFacultyInCharge"
+                        list="facultyInChargeList" />
+                <datalist id="facultyInChargeList">
+                    @{
+                        // var faculties = ViewBag.Faculties as List<Faculty>;
+                        foreach (var f in faculties)
+                        {
+                            <option data-id="@f.FacultyId" value="@f.FacultyName"></option>
+                        }
+                    }
+
+                </datalist>
+                <input type="hidden" id="facultyId" name="facultyId" value="" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="updateLectureCredits" class="form-label">Lecture Credits</label>
+                <input type="number"
+                        class="form-control"
+                        id="updateLectureCredits"
+                        placeholder="(e.g., 2.0)"
+                        value="0"
+                        min="0"
+                        step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="updatePracticalCredits" class="form-label">Practical Credits</label>
+                <input type="number"
+                        class="form-control"
+                        id="updatePracticalCredits"
+                        placeholder="(e.g., 2.0)"
+                        value="0"
+                        min="0"
+                        step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="updateInternshipCredits" class="form-label">Internship Credits</label>
+                <input type="number"
+                        class="form-control"
+                        id="updateInternshipCredits"
+                        placeholder="(e.g., 2.0)"
+                        value="0"
+                        min="0"
+                        step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="updateCapstoneCredits" class="form-label">Capstone Credits</label>
+                <input type="number"
+                        class="form-control"
+                        id="updateCapstoneCredits"
+                        placeholder="(e.g., 2.0)"
+                        value="0"
+                        min="0"
+                        step="0.5" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="updateTotalCredits" class="form-label">Total Credits</label>
+                <input type="number"
+                        class="form-control"
+                        id="updateTotalCredits"
+                        readonly
+                        placeholder="Readonly field" />
+            </div>
+
+            <div class="col-md-9">
+                <label for="updateCourseSummary" class="form-label">Course Summary</label>
+                <input type="text"
+                        class="form-control"
+                        id="updateCourseSummary" />
+            </div>
+
+            <div class="col-12" style="margin-top:20px; ">
+                <button id="updateCourseBtn" type="button" class="btn btn-warning" disabled>Update</button>
+                <button id="deleteCourseBtn" type="button" class="btn btn-danger">Delete</button>
+                <button id="cancelUpdateCourseBtn" type="button" class="btn btn-outline-secondary">Cancel</button>
             </div>
         </div>
+            
+        
     </div>
 </div>
-
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/common-modals.js"></script>
+    <script src="~/js/addCourseModalHandlers.js"></script>
     <script>
-                /* Make resetAndLoad available globally - safe fallback if the real function is defined later */
-        window.resetAndLoad = function () {
-            // best-effort reset: clear table and reset counters if they exist
-            try {
-                $("tbody").empty();
-            } catch (e) { /* ignore if DOM not ready */ }
-
-            window.sttCounter = 0;
-            window.currentPage = 0;
-            window.totalPages = 1;
-
-            if (typeof window.loadMoreCourses === "function") {
-                window.loadMoreCourses();
-            } else {
-                console.warn("loadMoreCourses not defined yet — reset will run when it becomes available.");
-            }
-        };
-
-                // Khi người dùng chọn một option từ datalist
-        $("#facultyInCharge").on("input change", function () {
-            const inputVal = $(this).val().trim();
-            let selectedFacultyId = "";
-
-            // Duyệt qua tất cả option trong datalist để tìm tên khớp
-            $("#facultyInChargeList option").each(function () {
-                if ($(this).val() === inputVal) {
-                    selectedFacultyId = $(this).data("id");
-                    return false; // break
-                }
-            });
-
-            $("#facultyId").val(selectedFacultyId || ""); // nếu không tìm thấy thì để trống
-        });
-
-        // Trường hợp người dùng xóa hết hoặc nhập tay không khớp → reset facultyId
-        $("#facultyInCharge").on("blur", function () {
-            const val = $(this).val().trim();
-            let found = false;
-            $("#facultyInChargeList option").each(function () {
-                if ($(this).val() === val) {
-                    found = true;
-                    return false;
-                }
-            });
-            if (!found) {
-                $("#facultyId").val("");
-            }
-        });
 
         $(document).ready(function() {
+            // Add a small style for label warning (yellow)
+            if (!$('head').find('#update-label-warning-style').length) {
+                $('<style id="update-label-warning-style"> .label-warning { color: #b58900 !important; font-weight: 600; } </style>').appendTo('head');
+            }
 
-            // Hide any traditional pagination if present (we rely on infinite scroll)
-            $(".pagination").hide();
-
-            // Filter modal open/close
-            $("#filterBtn").on("click", function() {
-                $("#filterModal").css("display", "flex");
-            });
-            $("#closeFilterModal").on("click", function() {
-                $("#filterModal").hide();
-            });
-            // Close when clicking outside content
-            $("#filterModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
+            // Helper: change label color to warning and optionally set field-level invalid feedback
+            function markUpdateFieldWarning(fieldId, message) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.addClass('label-warning');
+                if (message) {
+                    setFieldError($input, message);
                 }
-            });
+            }
+            function clearUpdateFieldWarning(fieldId) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.removeClass('label-warning');
+                clearFieldError($input);
+            }
 
-            // Filter handlers
-            $("#applyFilterBtn").on("click", function() {
-                const name = $("#filterName").val()?.toString().trim();
-                const code = $("#filterCode").val()?.toString().trim();
-                const facultyId = $("#filterFacultyId").val();
-                const summary = $("#filterSummary").val()?.toString().trim();
+            // Utility: get faculty id for update modal from datalist
+            function getFacultyIdFromUpdate() {
+                const val = $('#updateFacultyInCharge').val()?.toString().trim() || '';
+                if (!val) return null;
+                let selected = null;
+                $('#facultyInChargeList option').each(function () {
+                    if ($(this).val() === val) {
+                        selected = $(this).data('id') || null;
+                        return false;
+                    }
+                });
+                return selected;
+            }
 
-                // Build filters object only including non-empty values so model binding of nullable types works
-                filters = {};
-                if (name) filters.name = name;
-                if (code) filters.code = code;
-                if (facultyId) {
-                    if (facultyId !== "") filters.facultyId = facultyId;
-                }
-                if (summary) filters.summary = summary;
+            // --- existing handlers kept (escape, modals, add-course handlers, filters etc) ---
 
-                const lectureMin = $("#filterLectureMin").val();
-                const lectureMax = $("#filterLectureMax").val();
-                if (lectureMin !== "") filters.lectureMin = lectureMin;
-                if (lectureMax !== "") filters.lectureMax = lectureMax;
-
-                const practicalMin = $("#filterPracticalMin").val();
-                const practicalMax = $("#filterPracticalMax").val();
-                if (practicalMin !== "") filters.practicalMin = practicalMin;
-                if (practicalMax !== "") filters.practicalMax = practicalMax;
-
-                const internshipMin = $("#filterInternshipMin").val();
-                const internshipMax = $("#filterInternshipMax").val();
-                if (internshipMin !== "") filters.internshipMin = internshipMin;
-                if (internshipMax !== "") filters.internshipMax = internshipMax;
-
-                const capstoneMin = $("#filterCapstoneMin").val();
-                const capstoneMax = $("#filterCapstoneMax").val();
-                if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
-                if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
-
-                const totalMin = $("#filterTotalMin").val();
-                const totalMax = $("#filterTotalMax").val();
-                if (totalMin !== "") filters.totalMin = totalMin;
-                if (totalMax !== "") filters.totalMax = totalMax;
-
-                // Toggle filter indicator (red dot) if any filter is set
-                const anyFilter = Object.keys(filters).length > 0;
-                if (anyFilter) {
-                    $("#filterBtn").addClass("has-active-filters");
-                } else {
-                    $("#filterBtn").removeClass("has-active-filters");
-                }
-
-                $("#filterModal").hide();
-
-                // Reset and load with new filters
-                resetAndLoad();
-            });
-
-            $("#clearFilterBtn").on("click", function() {
+                    // Nút Clear xóa hết dữ liệu trong các trường của Filter Modal
+            $("#clearFilterBtn").on("click", function () {
                 $("#filterName").val("");
                 $("#filterCode").val("");
                 $("#filterFacultyId").val("");
+                $("#filterLectureMin").val("");
+                $("#filterLectureMax").val("");
+                $("#filterPracticalMin").val("");
+                $("#filterPracticalMax").val("");
+                $("#filterInternshipMin").val("");
+                $("#filterInternshipMax").val("");
+                $("#filterCapstoneMin").val("");
+                $("#filterCapstoneMax").val("");
+                $("#filterTotalMin").val("");
+                $("#filterTotalMax").val("");
                 $("#filterSummary").val("");
-
-                $("#filterLectureMin, #filterLectureMax, #filterPracticalMin, #filterPracticalMax, #filterInternshipMin, #filterInternshipMax, #filterCapstoneMin, #filterCapstoneMax, #filterTotalMin, #filterTotalMax").val("");
-
                 filters = {};
-                $("#filterBtn").removeClass("has-active-filters");
-                resetAndLoad();
+                $("#filterBtn").removeClass("has-active-filters"); // Xóa luôn cả red dot (cái xuất hiện khi nhất nút Apply Filter)
+                resetAndLoad(); // Tải lại trang
             });
 
-            // Xử lý hiện/ẩn Add Course Modal
-            $("#addCourseBtn").on("click", function() {
-                $("#addCourseModal").css("display", "flex");
-            });
-            $("#closeAddCourseModal").on("click", function() {
-                $("#addCourseModal").hide();
-            });
-            $("#addCourseModal").on("click", function(e) {
-                if (e.target === this) {
-                    $(this).hide();
-                }
-            });
 
-            // Update total credits whenever credit fields change
-            function updateTotalCredits() {
-                const lecture = parseFloat($("#lectureCredits").val() || 0) || 0;
-                const practical = parseFloat($("#practicalCredits").val() || 0) || 0;
-                const internship = parseFloat($("#internshipCredits").val() || 0) || 0;
-                const capstone = parseFloat($("#capstoneCredits").val() || 0) || 0;
-                const total = lecture + practical + capstone;
-                $("#totalCredits").val(total);
-            }
-            $("#lectureCredits, #practicalCredits, #internshipCredits, #capstoneCredits").on("input change", updateTotalCredits);
+        // (chuyển sang addCourseModalHandlers.js)
 
-            // Add new course handler
-            $("#addNewCourseBtn").on("click", function () {
-
-                // Gọi hàm cập nhật tổng tín chỉ trước khi gửi
-                updateTotalCredits();
-                // client-side validation
-                const courseName = $("#courseName").val()?.toString().trim() || "";
-                const tenHocPhan = $("#tenHocPhan").val()?.toString().trim() || "";
-                const courseCode = $("#courseCode").val()?.toString().trim() || "";
-                const faculty = $("#facultyInCharge").val()?.toString().trim() || "";
-                const facultyId = $("#facultyId").val()?.toString().trim() || "";
-
-
-                const lecture = parseFloat($("#lectureCredits").val() || 0) || 0;
-                const practical = parseFloat($("#practicalCredits").val() || 0) || 0;
-                const internship = parseFloat($("#internshipCredits").val() || 0) || 0;
-                const capstone = parseFloat($("#capstoneCredits").val() || 0) || 0;
-                // const totalCredits = parseFloat($("#totalCredits").val() || 0) || 0;
-                const summary = $("#courseSummary").val()?.toString().trim() || "";
-
-
-                if (!courseName) {
-                    alert("Course name is required.");
-                    return;
-                }
-                if (!/^\d{7}$/.test(courseCode)) {
-                    alert("Course code is required and must be exactly 7 digits.");
-                    return;
-                }
-                if (lecture < 0 || practical < 0 || internship < 0 || capstone < 0) {
-                    alert("Credit values must be 0 or positive.");
-                    return;
-                }
-
-                const payload = {
-                    courseName: courseName,
-                    tenHocPhan: tenHocPhan,
-                    courseCode: courseCode,
-                    facultyId: $("#facultyId").val() || null,
-                    lectureCredits: lecture,
-                    practicalCredits: practical,
-                    internshipCredits: internship,
-                    capstoneCredits: capstone,
-                    courseSummary: summary
-                };
-
-                // disable button while submitting
-                $("#addNewCourseBtn").prop("disabled", true).text("Adding...");
-
-                $.ajax({
-                    url: "/Admin/AddCourse",
-                    method: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify(payload),
-                    success: function (res) {
-                        alert(res?.message || "Course added successfully.");
-                        $("#addCourseModal").hide();
-                        // reset form
-                        $("#courseName, #tenHocPhan, #courseCode, #facultyInCharge, #lectureCredits, #practicalCredits, #internshipCredits, #capstoneCredits, #courseSummary").val("");
-                        $("#totalCredits").val("");
-                        // refresh list to show newly added course: clear and reload
-                        resetAndLoad();
-                    },
-                    error: function (xhr) {
-                        let message = "Failed to add course.";
-                        try {
-                            const json = JSON.parse(xhr.responseText || "{}");
-                            if (json?.message) message = json.message;
-                        } catch (e) {
-                            // ignore parse error
-                        }
-                        alert(message);
-                    },
-                    complete: function () {
-                        $("#addNewCourseBtn").prop("disabled", false).text("Add");
-                    }
-                });
-            });
 
             // Infinite scroll and filter setup
             // Render server values as numeric literals
@@ -470,18 +526,183 @@
                 loadMoreCourses();
             }
 
-            // View details handler
+                    // Load more courses function
+        function loadMoreCourses() {
+            if (isLoading) {
+                console.log("Skipped loadMoreCourses() because already loading.");
+                return;
+            }
+            if (currentPage >= totalPages) {
+                console.log("No more pages to load. currentPage:", currentPage, "totalPages:", totalPages);
+                return;
+            }
+
+            isLoading = true;
+            currentPage++;
+
+            console.log("Requesting page", currentPage, "with filters", filters);
+
+            $.ajax({
+                url: "/Admin/GetCourses",
+                method: "GET",
+                data: Object.assign({ page: currentPage }, filters),
+                success: function (data) {
+                    console.log("GetCourses success for page", currentPage, data);
+                    if (data.courses && data.courses.length > 0) {
+                        data.courses.forEach(function (c) {
+                            sttCounter++;
+                            let facultyCell = c.facultyName ? c.facultyName : "<em>Not set yet</em>";
+                            let summaryCell = c.courseSummary ? c.courseSummary : "<em>Not set yet</em>";
+                            let row = `
+                                            <tr>
+                                                <td>
+                                                    <button class="btn btn-info btn-sm view-details" data-id="${c.courseId}">View</button>
+                                                </td>
+                                                <td>${sttCounter}</td>
+                                                <td>${c.courseId}</td>
+                                                <td>
+                                                    <a href="#" class="view-details" data-id="${c.courseId}">
+                                                        ${c.courseCode || "N/A"}
+                                                    </a>
+                                                </td>
+                                                <td>${c.courseName || ""}</td>
+                                                <td>${facultyCell}</td>
+                                                <td>${c.totalCredits}</td>
+                                                <td>${c.lectureCredits}</td>
+                                                <td>${c.practicalCredits}</td>
+                                                <td>${c.internshipCredits}</td>
+                                                <td>${c.capstoneCredits}</td>
+                                                <td>${summaryCell}</td>
+                                            </tr>
+                                        `;
+                            $("tbody").append(row);
+                        });
+
+                        totalPages = data.totalPages || totalPages;
+                        console.log("Updated totalPages:", totalPages);
+                    } else {
+                        console.log("No more courses in response for page", currentPage);
+                    }
+                    isLoading = false;
+
+                    // If page still short after appending, try loading next automatically
+                    autoFillIfNeeded();
+                },
+                error: function (xhr, status, err) {
+                    console.error("Error loading more courses", status, err, xhr);
+                    isLoading = false;
+                }
+            });
+        }
+
+            // Course details handler
+
+
+            // Xử lý khi user sửa dữ liệu sẵn có trong Update Course Modal
+            // 1. Lấy phần tử nút
+            const updateCourseBtn = document.getElementById('updateCourseBtn');
+
+            // Update total credits for update modal
+            function updateUpdateTotalCredits() {
+                const lecture = parseFloat($("#updateLectureCredits").val() || 0) || 0;
+                const practical = parseFloat($("#updatePracticalCredits").val() || 0) || 0;
+                // const internship = parseFloat($("#updateInternshipCredits").val() || 0) || 0;
+                const capstone = parseFloat($("#updateCapstoneCredits").val() || 0) || 0;
+                const total = lecture + practical + capstone;
+                $("#updateTotalCredits").val(total);
+            }
+            $("#updateLectureCredits, #updatePracticalCredits, #updateInternshipCredits, #updateCapstoneCredits").on("input change", updateUpdateTotalCredits);
+
+            // Validate update modal fields; show yellow label and invalid feedback for problems
+            function validateUpdateModalFields() {
+                // clear previous warnings
+                const fields = ['updateCourseCode','updateCourseName','updateLectureCredits','updatePracticalCredits','updateInternshipCredits','updateCapstoneCredits'];
+                fields.forEach(f => clearUpdateFieldWarning(f));
+
+                let valid = true;
+
+                const courseName = $('#updateCourseName').val()?.toString().trim() || '';
+                const courseCode = $('#updateCourseCode').val()?.toString().trim() || '';
+                const lecture = parseFloat($('#updateLectureCredits').val() || 0) || 0;
+                const practical = parseFloat($('#updatePracticalCredits').val() || 0) || 0;
+                const internship = parseFloat($('#updateInternshipCredits').val() || 0) || 0;
+                const capstone = parseFloat($('#updateCapstoneCredits').val() || 0) || 0;
+
+                if (!courseName) {
+                    markUpdateFieldWarning('updateCourseName', 'Course name is required.');
+                    valid = false;
+                }
+
+                if (!/^\d{7}$/.test(courseCode)) {
+                    markUpdateFieldWarning('updateCourseCode', 'Course code must be exactly 7 digits.');
+                    valid = false;
+                }
+
+                if (lecture < 0) {
+                    markUpdateFieldWarning('updateLectureCredits', 'Lecture credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (practical < 0) {
+                    markUpdateFieldWarning('updatePracticalCredits', 'Practical credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (internship < 0) {
+                    markUpdateFieldWarning('updateInternshipCredits', 'Internship credits must be 0 or positive.');
+                    valid = false;
+                }
+                if (capstone < 0) {
+                    markUpdateFieldWarning('updateCapstoneCredits', 'Capstone credits must be 0 or positive.');
+                    valid = false;
+                }
+
+                return valid;
+            }
+
+            // Replace earlier change-detection: combine change detection + validation to enable Update button
+            $('#updateCourseModal input').off('input change').on('input change', function() {
+                const originalValues = {
+                    courseName: $('#updateCourseName').data('original') || '',
+                    tenHocPhan: $('#updateTenHocPhan').data('original') || '',
+                    courseCode: $('#updateCourseCode').data('original') || '',
+                    facultyInCharge: $('#updateFacultyInCharge').data('original') || '',
+                    lectureCredits: $('#updateLectureCredits').data('original') || '0',
+                    practicalCredits: $('#updatePracticalCredits').data('original') || '0',
+                    internshipCredits: $('#updateInternshipCredits').data('original') || '0',
+                    capstoneCredits: $('#updateCapstoneCredits').data('original') || '0',
+                    courseSummary: $('#updateCourseSummary').data('original') || ''
+                };
+                const currentValues = {
+                    courseName: $('#updateCourseName').val() || '',
+                    tenHocPhan: $('#updateTenHocPhan').val() || '',
+                    courseCode: $('#updateCourseCode').val() || '',
+                    facultyInCharge: $('#updateFacultyInCharge').val() || '',
+                    lectureCredits: $('#updateLectureCredits').val() || '0',
+                    practicalCredits: $('#updatePracticalCredits').val() || '0',
+                    internshipCredits: $('#updateInternshipCredits').val() || '0',
+                    capstoneCredits: $('#updateCapstoneCredits').val() || '0',
+                    courseSummary: $('#updateCourseSummary').val() || ''
+                };
+                let isChanged = false;
+                for (const key in originalValues) {
+                    if (originalValues[key] != currentValues[key]) {
+                        isChanged = true;
+                        break;
+                    }
+                }
+
+                // Validate fields and update UI accordingly
+                const valid = validateUpdateModalFields();
+
+                // Enable Update only if there is a change and the fields are valid
+                updateCourseBtn.disabled = !(isChanged && valid);
+            });
+
+            // Load course data via AJAX into the Update Course Modal
             $(document).on("click", ".view-details", function (e) {
                 e.preventDefault();
                 const id = $(this).data("id");
 
-                // Reset state
-                $("#course-details-loading").show();
-                $("#course-details-content").hide();
-
-                // Open modal
-                const modal = new bootstrap.Modal(document.getElementById("courseDetailsModal"));
-                modal.show();
+                $("#updateCourseModal").css("display", "flex");
 
                 // AJAX to get data
                 $.ajax({
@@ -489,92 +710,235 @@
                     method: "GET",
                     data: { id: id },
                     success: function (c) {
-                        $("#course-details-loading").hide();
-                        $("#course-details-content").show();
+                        currentCourseCode = c.courseCode;
+                        currentCourseName = c.courseName;
+                        currentTenHocPhan = c.tenHocPhan;
+                        currentFacultyInCharge = c.facultyName;
+                        currentLectureCredits = c.lectureCredits;
+                        currentPracticalCredits = c.practicalCredits;
+                        currentInternshipCredits = c.internshipCredits;
+                        currentCapstoneCredits = c.capstoneCredits;
+                        currentCourseSummary = c.courseSummary;
 
-                        $("#detail-course-id").text(c.courseId);
-                        $("#detail-course-code").text(c.courseCode);
-                        $("#detail-course-name").text(c.courseName);
-                        $("#detail-faculty-id").text(c.facultyId);
-                        $("#detail-total-credits").text(c.totalCredits);
-                        $("#detail-lecture-credits").text(c.lectureCredits);
-                        $("#detail-practical-credits").text(c.practicalCredits);
-                        $("#detail-internship-credits").text(c.internshipCredits);
-                        $("#detail-capstone-credits").text(c.capstoneCredits);
-                        $("#detail-summary").text(c.courseSummary);
+                        $("#updateCourseId").val(c.courseId);
+                        $("#updateCourseCode").val(c.courseCode);
+                        $("#updateCourseName").val(c.courseName);
+                        $("#updateTenHocPhan").val(c.tenHocPhan);
+                        $("#updateFacultyInCharge").val(c.facultyName);
+                        $("#updateTotalCredits").val(c.totalCredits);
+                        $("#updateLectureCredits").val(c.lectureCredits);
+                        $("#updatePracticalCredits").val(c.practicalCredits);
+                        $("#updateInternshipCredits").val(c.internshipCredits);
+                        $("#updateCapstoneCredits").val(c.capstoneCredits);
+                        $("#updateCourseSummary").val(c.courseSummary);
+
+                        // set data-original attributes for change detection
+                        $('#updateCourseCode').data('original', c.courseCode || '');
+                        $('#updateCourseName').data('original', c.courseName || '');
+                        $('#updateTenHocPhan').data('original', c.tenHocPhan || '');
+                        $('#updateFacultyInCharge').data('original', c.facultyName || '');
+                        $('#updateLectureCredits').data('original', (c.lectureCredits ?? 0).toString());
+                        $('#updateTotalCredits').data('original', (c.totalCredits ?? 0).toString());
+                        $('#updatePracticalCredits').data('original', (c.practicalCredits ?? 0).toString());
+                        $('#updateInternshipCredits').data('original', (c.internshipCredits ?? 0).toString());
+                        $('#updateCapstoneCredits').data('original', (c.capstoneCredits ?? 0).toString());
+                        $('#updateCourseSummary').data('original', c.courseSummary || '');
+
+                        // clear any previous warnings / errors when modal opens
+                        ['updateCourseCode','updateCourseName','updateLectureCredits','updatePracticalCredits','updateInternshipCredits','updateCapstoneCredits'].forEach(f => clearUpdateFieldWarning(f));
+                        // ensure update button is disabled initially
+                        updateCourseBtn.disabled = true;
                     },
                     error: function () {
-                        $("#course-details-loading").text("Failed to load data.");
+                        // $("#course-details-loading").text("Failed to load data.");
+                        console.log("fail to load course data!")
                     }
                 });
             });
 
-            // Load more courses function
-            function loadMoreCourses() {
-                if (isLoading) {
-                    console.log("Skipped loadMoreCourses() because already loading.");
+            // Delete Handler
+            $('#deleteCourseBtn').on('click', function () {
+                const courseId = $('#updateCourseId').val();
+                
+                if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
                     return;
                 }
-                if (currentPage >= totalPages) {
-                    console.log("No more pages to load. currentPage:", currentPage, "totalPages:", totalPages);
-                    return;
-                }
-
-                isLoading = true;
-                currentPage++;
-
-                console.log("Requesting page", currentPage, "with filters", filters);
-
+                // disable delete button during operation
+                $('#deleteCourseBtn').prop('disabled', true).text('Deleting...');
                 $.ajax({
-                    url: "/Admin/GetCourses",
-                    method: "GET",
-                    data: Object.assign({ page: currentPage }, filters),
-                    success: function (data) {
-                        console.log("GetCourses success for page", currentPage, data);
-                        if (data.courses && data.courses.length > 0) {
-                            data.courses.forEach(function(c) {
-                                sttCounter++;
-                                let row = `
-                                    <tr>
-                                        <td>
-                                            <button class="btn btn-info btn-sm view-details" data-id="${c.courseId}">View</button>
-                                        </td>
-                                        <td>${sttCounter}</td>
-                                        <td>${c.courseId}</td>
-                                        <td>
-                                            <a href="#" class="view-details" data-id="${c.courseId}">
-                                                ${c.courseCode || "N/A"}
-                                            </a>
-                                        </td>
-                                        <td>${c.courseName || ""}</td>
-                                        <td>${c.facultyName || (c.facultyId ?? "N/A")}</td>
-                                        <td>${c.totalCredits ?? 0}</td>
-                                        <td>${c.lectureCredits ?? 0}</td>
-                                        <td>${c.practicalCredits ?? 0}</td>
-                                        <td>${c.internshipCredits ?? 0}</td>
-                                        <td>${c.capstoneCredits ?? 0}</td>
-                                        <td>${c.courseSummary ?? ""}</td>
-                                    </tr>
-                                `;
-                                $("tbody").append(row);
-                            });
-
-                            totalPages = data.totalPages || totalPages;
-                            console.log("Updated totalPages:", totalPages);
+                    url: '/Admin/DeleteCourse',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(courseId),
+                    success: function (res) {
+                        if (res && res.success) {
+                            alert(res.message || 'Course deleted successfully.');
+                            $('#updateCourseModal').hide();
+                            resetAndLoad();
                         } else {
-                            console.log("No more courses in response for page", currentPage);
+                            const msg = (res && res.message) ? res.message : 'Failed to delete course.';
+                            alert(msg);
                         }
-                        isLoading = false;
-
-                        // If page still short after appending, try loading next automatically
-                        autoFillIfNeeded();
                     },
-                    error: function (xhr, status, err) {
-                        console.error("Error loading more courses", status, err, xhr);
-                        isLoading = false;
+                    error: function () {
+                        alert('Failed to delete course due to server error. Please try again later.');
+                    },
+                    complete: function () {
+                        $('#deleteCourseBtn').prop('disabled', false).text('Delete');
                     }
                 });
-            }
+            });
+
+            // Delete confirmation before proceeding
+            
+
+            // NEW: Update button handler (sends data to server; handles server-side validation feedback)
+            $('#updateCourseBtn').on('click', function () {
+                // Clear previous warning
+                const trackedFields = ['updateCourseCode',
+                                       'updateCourseName',
+                                       'updateTenHocPhan',
+                                       'updateLectureCredits',
+                                       'updatePracticalCredits',
+                                       'updateInternshipCredits',
+                                       'updateCapstoneCredits'];
+                trackedFields.forEach(f => clearUpdateFieldWarning(f));
+
+
+                // disable button during submit
+                $('#updateCourseBtn').prop('disabled', true).text('Updating...');
+
+                // gather inputs
+                const payload = {
+                    courseId: $('#updateCourseId').val(),
+                    courseCode: $('#updateCourseCode').val()?.toString().trim() || '',
+                    courseName: $('#updateCourseName').val()?.toString().trim() || '',
+                    tenHocPhan: $('#updateTenHocPhan').val()?.toString().trim() || '',
+                    facultyId: getFacultyIdFromUpdate(),
+                    lectureCredits: parseFloat($('#updateLectureCredits').val() || 0) || 0,
+                    practicalCredits: parseFloat($('#updatePracticalCredits').val() || 0) || 0,
+                    internshipCredits: parseFloat($('#updateInternshipCredits').val() || 0) || 0,
+                    capstoneCredits: parseFloat($('#updateCapstoneCredits').val() || 0) || 0,
+                    courseSummary: $('#updateCourseSummary').val()?.toString().trim() || ''
+                };
+
+                // Minimal client-side safe-check before sending to server
+                if (!payload.courseName) {
+                    markUpdateFieldWarning('updateCourseName', 'Course name is required.');
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+                if (!/^\d{7}$/.test(payload.courseCode)) {
+                    markUpdateFieldWarning('updateCourseCode', 'Course code must be exactly 7 digits.');
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+                // do not allow negative credits client-side
+                if (payload.lectureCredits < 0 || payload.practicalCredits < 0 || payload.internshipCredits < 0 || payload.capstoneCredits < 0) {
+                    if (payload.lectureCredits < 0) markUpdateFieldWarning('updateLectureCredits', "The credits can't be negative.");
+                    if (payload.practicalCredits < 0) markUpdateFieldWarning('updatePracticalCredits', "The credits can't be negative.");
+                    if (payload.internshipCredits < 0) markUpdateFieldWarning('updateInternshipCredits', "The credits can't be negative.");
+                    if (payload.capstoneCredits < 0) markUpdateFieldWarning('updateCapstoneCredits', "The credits can't be negative.");
+                    $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    return;
+                }
+
+                // Send to the server for authoritative validation + update
+                $.ajax({
+                    url: '/Admin/UpdateCourse',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        // Expected shape:
+                        // { sucess: true, message: "Updated"}
+                        // OR { success: false, message: "Validation failed", errors: { fieldName: "error message" ,...} }
+
+                        if (res && res.success) {
+                            alert(res.message || 'Course updated successfully.');
+                            $('#updateCourseModal').hide();
+                            resetAndLoad();
+                        } else {
+                            // handle structured validation errors if present
+                            const errors = (res && res.errors) ? res.errors : null;
+                            if (errors && typeof errors === 'object') {
+                                // map potential server field names to input ids
+                                const map = {
+                                    courseName: 'updateCourseName',
+                                    courseCode: 'updateCourseCode',
+                                    tenHocPhan: 'updateTenHocPhan',
+                                    facultyId: 'updateFacultyInCharge',
+                                    lectureCredits: 'updateLectureCredits',
+                                    practicalCredits: 'updatePracticalCredits',
+                                    internshipCredits: 'updateInternshipCredits',
+                                    capstoneCredits: 'updateCapstoneCredits',
+                                    courseSummary: 'updateCourseSummary'
+                                };
+                                let showedGeneral = false;
+                                Object.keys(errors).forEach(function (k) {
+                                    const message = errors[k] || 'Invalid value.';
+                                    const fld = map[k] || null;
+                                    if (fld) {
+                                        markUpdateFieldWarning(fld, message);
+                                    } else {
+                                        // unknown field -> as general message but limited
+                                        if (!showedGeneral) {
+                                            alert(message);
+                                            showedGeneral = true;
+                                        }
+                                    }
+                                });
+                            } else {
+                                // fallback: show server message if provided, otherwise a concise generic message
+                                const msg = (res && res.message) ? res.message : 'Failed to update course. Please check your input.';
+                                alert(msg);
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        // try to parse structured response
+                        let parsed = null;
+                        try {
+                            parsed = JSON.parse(xhr.responseText || "{}");
+                        } catch (e) {
+                            // ignore parse error
+                        }
+
+                        if (parsed && parsed.errors) {
+                            // handle same as above
+                            const map = {
+                                courseName: 'updateCourseName',
+                                courseCode: 'updateCourseCode',
+                                tenHocPhan: 'updateTenHocPhan',
+                                facultyId: 'updateFacultyInCharge',
+                                lectureCredits: 'updateLectureCredits',
+                                practicalCredits: 'updatePracticalCredits',
+                                internshipCredits: 'updateInternshipCredits',
+                                capstoneCredits: 'updateCapstoneCredits',
+                                courseSummary: 'updateCourseSummary'
+                            };
+                            Object.keys(parsed.errors).forEach(function (k) {
+                                const message = parsed.errors[k] || 'Invalid value.';
+                                const fld = map[k] || null;
+                                if (fld) {
+                                    markUpdateFieldWarning(fld, message);
+                                }
+                            });
+                        } else if (parsed && parsed.message) {
+                            alert(parsed.message);
+                        } else {
+                            alert('Failed to update course due to server error. Please try again later.');
+                        }
+
+                    },
+                    complete: function () {
+                        $('#updateCourseBtn').prop('disabled', false).text('Update');
+                    }
+                });
+            });
+
+
+            
 
             // Scroll event listener (throttle basic)
             let scrollTimer = null;
@@ -590,112 +954,110 @@
 
             // Initial check: if first page already rendered, try to auto-fill if not enough content
             autoFillIfNeeded();
-        });
+            
+            // Validation helpers for credit range pairs
+            function parseNullableNumber(selector) {
+                const v = $(selector).val();
+                if (v === "" || v === null || v === undefined) return null;
+                const n = parseFloat(v);
+                return isNaN(n) ? null : n;
+            }
+            function setFieldError($el, message) {
+                $el.addClass("is-invalid");
+                let $fb = $el.next(".invalid-feedback");
+                if (!$fb.length) {
+                    $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
+                }
+                $fb.text(message);
+            }
+            function clearFieldError($el) {
+                $el.removeClass("is-invalid");
+                const $fb = $el.next(".invalid-feedback");
+                if ($fb.length) $fb.remove();
+            }
+            function validateRangePair(minSelector, maxSelector, label) {
+                const $min = $(minSelector), $max = $(maxSelector);
+                clearFieldError($min); clearFieldError($max);
+                const min = parseNullableNumber(minSelector);
+                const max = parseNullableNumber(maxSelector);
+                if (min !== null && max !== null && min > max) {
+                    setFieldError($min, label + " min must be less than or equal to max.");
+                    setFieldError($max, "");
+                    return false;
+                }
+                return true;
+            }
+            // Wire up real-time validation for each pair
+            ["Lecture","Practical","Internship","Capstone","Total"].forEach(function(prefix) {
+                const minSel = "#filter" + prefix + "Min";
+                const maxSel = "#filter" + prefix + "Max";
+                $(minSel + "," + maxSel).on("input change", function() {
+                    validateRangePair(minSel, maxSel, prefix + " credits");
+                });
+            });
 
-                // Validation helpers for credit range pairs
-        function parseNullableNumber(selector) {
-            const v = $(selector).val();
-            if (v === "" || v === null || v === undefined) return null;
-            const n = parseFloat(v);
-            return isNaN(n) ? null : n;
-        }
-        function setFieldError($el, message) {
-            $el.addClass("is-invalid");
-            let $fb = $el.next(".invalid-feedback");
-            if (!$fb.length) {
-                $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
-            }
-            $fb.text(message);
-        }
-        function clearFieldError($el) {
-            $el.removeClass("is-invalid");
-            const $fb = $el.next(".invalid-feedback");
-            if ($fb.length) $fb.remove();
-        }
-        function validateRangePair(minSelector, maxSelector, label) {
-            const $min = $(minSelector), $max = $(maxSelector);
-            clearFieldError($min); clearFieldError($max);
-            const min = parseNullableNumber(minSelector);
-            const max = parseNullableNumber(maxSelector);
-            if (min !== null && max !== null && min > max) {
-                setFieldError($min, label + " min must be less than or equal to max.");
-                setFieldError($max, "");
-                return false;
-            }
-            return true;
-        }
-        // Wire up real-time validation for each pair
-        ["Lecture","Practical","Internship","Capstone","Total"].forEach(function(prefix) {
-            const minSel = "#filter" + prefix + "Min";
-            const maxSel = "#filter" + prefix + "Max";
-            $(minSel + "," + maxSel).on("input change", function() {
-                validateRangePair(minSel, maxSel, prefix + " credits");
+            // Replace / augment apply handler: validate before building filters
+            // (If your file already defines this handler, replace that block with the one below.)
+            $("#applyFilterBtn").off("click").on("click", function() {
+                // Validate all pairs first
+                const pairsValid =
+                    validateRangePair("#filterLectureMin", "#filterLectureMax", "Lecture")
+                    & validateRangePair("#filterPracticalMin", "#filterPracticalMax", "Practical")
+                    & validateRangePair("#filterInternshipMin", "#filterInternshipMax", "Internship")
+                    & validateRangePair("#filterCapstoneMin", "#filterCapstoneMax", "Capstone")
+                    & validateRangePair("#filterTotalMin", "#filterTotalMax", "Total");
+                if (!pairsValid) {
+                    // Focus first invalid input
+                    const $firstInvalid = $(".is-invalid").first();
+                    if ($firstInvalid.length) $firstInvalid.focus();
+                    return; // stop - do not apply filters
+                }
+
+                // Existing filter build logic (unchanged)
+                const name = $("#filterName").val()?.toString().trim();
+                const code = $("#filterCode").val()?.toString().trim();
+                const facultyId = $("#filterFacultyId").val();
+                const summary = $("#filterSummary").val()?.toString().trim();
+
+                filters = {};
+                if (name) filters.name = name;
+                if (code) filters.code = code;
+                if (facultyId) { if (facultyId !== "") filters.facultyId = facultyId; }
+                if (summary) filters.summary = summary;
+
+                const lectureMin = $("#filterLectureMin").val();
+                const lectureMax = $("#filterLectureMax").val();
+                if (lectureMin !== "") filters.lectureMin = lectureMin;
+                if (lectureMax !== "") filters.lectureMax = lectureMax;
+
+                const practicalMin = $("#filterPracticalMin").val();
+                const practicalMax = $("#filterPracticalMax").val();
+                if (practicalMin !== "") filters.practicalMin = practicalMin;
+                if (practicalMax !== "") filters.practicalMax = practicalMax;
+
+                const internshipMin = $("#filterInternshipMin").val();
+                const internshipMax = $("#filterInternshipMax").val();
+                if (internshipMin !== "") filters.internshipMin = internshipMin;
+                if (internshipMax !== "") filters.internshipMax = internshipMax;
+
+                const capstoneMin = $("#filterCapstoneMin").val();
+                const capstoneMax = $("#filterCapstoneMax").val();
+                if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
+                if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
+
+                const totalMin = $("#filterTotalMin").val();
+                const totalMax = $("#filterTotalMax").val();
+                if (totalMin !== "") filters.totalMin = totalMin;
+                if (totalMax !== "") filters.totalMax = totalMax;
+
+                const anyFilter = Object.keys(filters).length > 0;
+                if (anyFilter) $("#filterBtn").addClass("has-active-filters"); else $("#filterBtn").removeClass("has-active-filters");
+
+                $("#filterModal").hide();
+                resetAndLoad();
             });
         });
 
-        // Replace / augment apply handler: validate before building filters
-        // (If your file already defines this handler, replace that block with the one below.)
-        $("#applyFilterBtn").off("click").on("click", function() {
-            // Validate all pairs first
-            const pairsValid =
-                validateRangePair("#filterLectureMin", "#filterLectureMax", "Lecture")
-                & validateRangePair("#filterPracticalMin", "#filterPracticalMax", "Practical")
-                & validateRangePair("#filterInternshipMin", "#filterInternshipMax", "Internship")
-                & validateRangePair("#filterCapstoneMin", "#filterCapstoneMax", "Capstone")
-                & validateRangePair("#filterTotalMin", "#filterTotalMax", "Total");
-            if (!pairsValid) {
-                // Focus first invalid input
-                const $firstInvalid = $(".is-invalid").first();
-                if ($firstInvalid.length) $firstInvalid.focus();
-                return; // stop - do not apply filters
-            }
-
-            // Existing filter build logic (unchanged)
-            const name = $("#filterName").val()?.toString().trim();
-            const code = $("#filterCode").val()?.toString().trim();
-            const facultyId = $("#filterFacultyId").val();
-            const summary = $("#filterSummary").val()?.toString().trim();
-
-            filters = {};
-            if (name) filters.name = name;
-            if (code) filters.code = code;
-            if (facultyId) { if (facultyId !== "") filters.facultyId = facultyId; }
-            if (summary) filters.summary = summary;
-
-            const lectureMin = $("#filterLectureMin").val();
-            const lectureMax = $("#filterLectureMax").val();
-            if (lectureMin !== "") filters.lectureMin = lectureMin;
-            if (lectureMax !== "") filters.lectureMax = lectureMax;
-
-            const practicalMin = $("#filterPracticalMin").val();
-            const practicalMax = $("#filterPracticalMax").val();
-            if (practicalMin !== "") filters.practicalMin = practicalMin;
-            if (practicalMax !== "") filters.practicalMax = practicalMax;
-
-            const internshipMin = $("#filterInternshipMin").val();
-            const internshipMax = $("#filterInternshipMax").val();
-            if (internshipMin !== "") filters.internshipMin = internshipMin;
-            if (internshipMax !== "") filters.internshipMax = internshipMax;
-
-            const capstoneMin = $("#filterCapstoneMin").val();
-            const capstoneMax = $("#filterCapstoneMax").val();
-            if (capstoneMin !== "") filters.capstoneMin = capstoneMin;
-            if (capstoneMax !== "") filters.capstoneMax = capstoneMax;
-
-            const totalMin = $("#filterTotalMin").val();
-            const totalMax = $("#filterTotalMax").val();
-            if (totalMin !== "") filters.totalMin = totalMin;
-            if (totalMax !== "") filters.totalMax = totalMax;
-
-            const anyFilter = Object.keys(filters).length > 0;
-            if (anyFilter) $("#filterBtn").addClass("has-active-filters"); else $("#filterBtn").removeClass("has-active-filters");
-
-            $("#filterModal").hide();
-            resetAndLoad();
-        });
-
-            // ... end of loadMoreCourses function ...
-        window.loadMoreCourses = loadMoreCourses;
 
     </script>
 
