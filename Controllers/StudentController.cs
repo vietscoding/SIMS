@@ -15,7 +15,7 @@ namespace SIMS.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return View("~/Index.cshtml");
         }
 
         public IActionResult Create()

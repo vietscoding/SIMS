@@ -57,6 +57,66 @@
     </table>
 </div>
 
+@* Add New Person Modal *@
+<div id="addPersonModal" class="user-modal" style="display:none;">
+    <div class="user-modal-content">
+        <span class="close-modal" id="closeAddPersonModal">&times;</span>
+        <h3>Add New Person</h3>
+        <div class="row g-3" style="margin-top:12px;">
+            <div class="col-md-6">
+                <label for="personFullName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="personFullName" placeholder="Required" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="citizenIdNumber" class="form-label">Citizen ID (12 digits)</label>
+                <input type="text" class="form-control" id="citizenIdNumber" maxlength="12" placeholder="e.g., 012345678901" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="personGender" class="form-label">Gender</label>
+                <select class="form-select" id="personGender">
+                    <option value="">-- Select --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="personDob" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="personDob" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="personNationality" class="form-label">Nationality</label>
+                <input type="text" class="form-control" id="personNationality" placeholder="e.g., Vietnamese" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="personEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="personEmail" placeholder="example@domain.com" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="personPhone" class="form-label">Phone Number (10 digits, starts with 0)</label>
+                <input type="text" class="form-control" id="personPhone" maxlength="10" placeholder="e.g., 0123456789" />
+            </div>
+
+            <div class="col-12">
+                <label for="personAddress" class="form-label">Address</label>
+                <input type="text" class="form-control" id="personAddress" placeholder="Address" />
+            </div>
+
+            <div class="col-12" style="margin-top:20px;">
+                <button id="addNewPersonBtn" type="button" class="btn btn-success">Add</button>
+                <button id="cancelAddNewPersonBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 @* Filter Modal *@
 <div id="filterModal" class="user-modal">
     <div class="user-modal-content">
@@ -148,6 +208,7 @@
                     $("#filterBtn").removeClass("has-active-filters");
                 }
             });
+
             $("#clearFilterBtn").on("click", function() {
                 $("#filterName").val("");
                 $("#filterGender").val("");
@@ -157,12 +218,123 @@
                 $("#filterBtn").removeClass("has-active-filters");
             });
 
+            // Add Person modal handlers
+            $("#addBtn").on("click", function () {
+                // reset form
+                $("#personFullName").val("");
+                $("#citizenIdNumber").val("");
+                $("#personGender").val("");
+                $("#personDob").val("");
+                $("#personNationality").val("");
+                $("#personEmail").val("");
+                $("#personPhone").val("");
+                $("#personAddress").val("");
+                $("#addPersonModal").css("display", "flex");
+            });
+            $("#closeAddPersonModal, #cancelAddNewPersonBtn").on("click", function () {
+                $("#addPersonModal").hide();
+            });
+            // Close when clicking outside content
+            $("#addPersonModal").on("click", function (e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+
+            function isValidCitizenId(id) {
+                return /^\d{12}$/.test((id || "").toString().trim());
+            }
+            function isValidPhone(phone) {
+                return /^0\d{9}$/.test((phone || "").toString().trim());
+            }
+            function isValidDob(d) {
+                if (!d) return false;
+                const dt = new Date(d);
+                if (isNaN(dt.getTime())) return false;
+                const today = new Date();
+                if (dt > today) return false;
+                return dt >= new Date(1900,0,1);
+            }
+
+            $("#addNewPersonBtn").on("click", function () {
+                alert("Adding new person...");
+                const fullName = ($("#personFullName").val() || "").toString().trim();
+                const citizenId = ($("#citizenIdNumber").val() || "").toString().trim();
+                const genderText = ($("#personGender").val() || "").toString().trim();
+                const dobRaw = $("#personDob").val();
+                const email = ($("#personEmail").val() || "").toString().trim();
+                const phone = ($("#personPhone").val() || "").toString().trim();
+                const address = ($("#personAddress").val() || "").toString().trim();
+                const nationality = ($("#personNationality").val() || "").toString().trim();
+
+                // client-side validation
+                if (!fullName) {
+                    alert("Full name is required.");
+                    return;
+                }
+                if (!isValidCitizenId(citizenId)) {
+                    alert("Citizen ID must be exactly 12 digits.");
+                    return;
+                }
+                if (!genderText) {
+                    alert("Please select gender.");
+                    return;
+                }
+                if (!isValidDob(dobRaw)) {
+                    alert("Please provide a valid Date of Birth.");
+                    return;
+                }
+                if (!isValidEmail(email)) {
+                    alert("Email is not valid.");
+                    return;
+                }
+                if (phone && !isValidPhone(phone)) {
+                    alert("Phone number must start with 0 and contain 10 digits.");
+                    return;
+                }
+
+                const payload = {
+                    CitizenIdNumber: citizenId,
+                    FullName: fullName,
+                    Gender: genderText === "Male" ? true : false,
+                    DateOfBirth: dobRaw,
+                    Email: email,
+                    PhoneNumber: phone,
+                    Address: address,
+                    Nationality: nationality
+                };
+
+                // disable button while submitting
+                $("#addNewPersonBtn").prop("disabled", true).text("Adding...");
+
+                $.ajax({
+                    url: "/Admin/AddPerson",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        alert(res?.message || "Person added successfully.");
+                        $("#addPersonModal").hide();
+                        // reload to show the new person (keeps behavior consistent with other pages)
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        let message = "Failed to add person.";
+                        try {
+                            const json = xhr.responseJSON || JSON.parse(xhr.responseText || "{}");
+                            if (json?.message) message = json.message;
+                        } catch (e) { }
+                        alert(message);
+                    },
+                    complete: function () {
+                        $("#addNewPersonBtn").prop("disabled", false).text("Add");
+                    }
+                });
+            });
+
             // Test notifications cho các nút hành động
             $("#searchBtn").click(function () {
                 alert("Search button clicked (chưa có logic).");
-            });
-            $("#addBtn").click(function () {
-                alert("Add button clicked (chưa có logic).");
             });
             $("#editBtn").click(function () {
                 alert("Edit button clicked (chưa có logic).");
