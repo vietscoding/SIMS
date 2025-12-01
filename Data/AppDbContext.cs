@@ -18,6 +18,10 @@ namespace SIMS.Data
         public DbSet<Curriculum> Curriculum => Set<Curriculum>();
         public DbSet<CourseDependency> CourseDependencyies=> Set<CourseDependency>();
 
+        // Added: map Account and Role tables so EF can query them
+        public DbSet<Account> Accounts => Set<Account>();
+        public DbSet<Role> Roles => Set<Role>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -70,6 +74,8 @@ namespace SIMS.Data
                 entity.Property(e => e.AlternativeMajorName).HasMaxLength(255);
                 entity.Property(e => e.TenNganh).HasMaxLength(255);
             });
+
+            // No additional mapping required for Account/Role because they use [Table] attributes.
         }
     }
 }

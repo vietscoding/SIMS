@@ -1,26 +1,34 @@
 ﻿@{
     ViewData["Title"] = "Login";
-    // Layout = null;
+    Layout = "_Layout";
+    var returnUrl = ViewData["ReturnUrl"] as string;
 }
 
 
 <h2>Login</h2>
 
 <form asp-action="Login" method="post">
-    <div class="mb-3">
-        @if (ViewBag.Error != null)
-        {
-            <p style="color:red">@ViewBag.Error</p>
-        }
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="Username" required />
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
+    <div class="form-group">
+        <label for="userName">Username</label>
+        <input class="form-control" id="userName" name="userName" />
     </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="Password" required />
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input class="form-control" id="password" name="password" type="password" />
     </div>
-    <button type="submit" class="btn btn-primary">Login</button>
+    <button type="submit" class="btn btn-primary mt-2">Sign in</button>
 </form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="text-danger">
+        @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@err.ErrorMessage</div>
+        }
+    </div>
+}
 
 
 

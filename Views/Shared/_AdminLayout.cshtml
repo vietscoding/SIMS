@@ -1,9 +1,18 @@
-﻿
-
-@{
+﻿@{
     Layout = null;
 }
 @* File: _AdminLayout.cshtml *@
+@{
+    var userName = User.Identity?.Name ?? "Guest";
+    var userRole = "Guest";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        if (User.IsInRole("Admin")) userRole = "Admin";
+        else if (User.IsInRole("Lecturer")) userRole = "Lecturer";
+        else if (User.IsInRole("Student")) userRole = "Student";
+        else userRole = "User";
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,19 +27,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body class="admin-layout">
-    <aside class="sidebar" id="leftSidebar" aria-label="Main navigation">
+    <aside class="sidebar" id="leftSidebar" aria-label="Main navigation" style="position:relative;">
         <div class="sidebar-header">
             <button id="sidebarToggle" class="sidebar-toggle" aria-expanded="true" aria-controls="leftSidebar">☰</button>
             <span class="brand">Admin</span>
         </div>
 
-
         <!-- User Info Container -->
         <div class="user-info" id="userInfo">
             <img src="https://placehold.co/1024x1024?text=User" alt="User Avatar" class="user-avatar" />
             <div class="user-details">
-                <div class="user-name">John Doe</div>
-                <div class="user-title">Admin</div>
+                <div class="user-name">@userName</div>
+                <div class="user-title">@userRole</div>
             </div>
         </div>
         <hr />
@@ -39,10 +47,10 @@
             <div class="user-modal-content">
                 <span class="close-modal">&times;</span>
                 <h2>User Details</h2>
-                <p><strong>Name:</strong> John Doe</p>
-                <p><strong>Title:</strong> Administrator</p>
-                <p><strong>Email:</strong> john@example.com</p>
-                <p><strong>Joined:</strong> 2023-08-14</p>
+                <p><strong>Name:</strong> @userName</p>
+                <p><strong>Title:</strong> @userRole</p>
+                <p><strong>Email:</strong> <!-- optional: show email if available --></p>
+                <p><strong>Joined:</strong> <!-- optional: show created date --></p>
                 <!-- Thêm các thông tin khác nếu cần -->
             </div>
         </div>
@@ -66,8 +74,7 @@
             </a> *@
             <a asp-controller="AcademicProgram"
                asp-action="AcademicProgram"
-               class="menu-item @((
-                       ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicProgram"
+               class="menu-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicProgram"
                        || ViewContext.RouteData.Values["controller"]?.ToString() == "ProgramDetail"
                    )
                                   && ViewContext.RouteData.Values["action"]?.ToString() == "AcademicProgram"
@@ -86,6 +93,26 @@
             </a>
             <!-- Add more items here -->
         </nav>
+
+        @* Sticky footer: logout/login placed at bottom of sidebar. The logout control uses the same markup structure as menu items so width/spacing match. *@
+        <div class="sidebar-footer" style="position:absolute; bottom:16px; left:0; width:100%; padding:12px; box-sizing:border-box;">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Account" asp-action="Logout" method="post" class="mb-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="menu-item logout-item" style="display:flex;align-items:center;width:100%;background:#d9534f;color:#fff;border:none;padding:10px 14px;border-radius:6px;box-sizing:border-box;">
+                        
+                        <span class="menu-text"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" /></svg> Logout</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="menu-item" style="display:flex;align-items:start;width:100%;padding:10px 14px;">
+                    <span class="menu-text"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" /></svg> Login</span>
+                </a>
+            }
+        </div>
     </aside>
 
     <div class="content" id="mainContent">
