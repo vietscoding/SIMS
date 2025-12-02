@@ -23,6 +23,12 @@ namespace SIMS.Controllers
             return View();
         }
 
+        public IActionResult PeopleList()
+        {
+            var people = _db.GetAllPeople();
+            return View(people);
+        }
+
         [HttpPost]
         public IActionResult AddPerson([FromBody] SIMS.Models.Person model)
         {

@@ -543,7 +543,7 @@
             console.log("Requesting page", currentPage, "with filters", filters);
 
             $.ajax({
-                url: "/Admin/GetCourses",
+                url: "/Course/GetCourses",
                 method: "GET",
                 data: Object.assign({ page: currentPage }, filters),
                 success: function (data) {
@@ -706,7 +706,7 @@
 
                 // AJAX to get data
                 $.ajax({
-                    url: "/Admin/GetCourseDetails",
+                    url: "/Course/GetCourseDetails",
                     method: "GET",
                     data: { id: id },
                     success: function (c) {
@@ -766,7 +766,7 @@
                 // disable delete button during operation
                 $('#deleteCourseBtn').prop('disabled', true).text('Deleting...');
                 $.ajax({
-                    url: '/Admin/DeleteCourse',
+                    url: '/Course/DeleteCourse',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(courseId),
@@ -845,7 +845,7 @@
 
                 // Send to the server for authoritative validation + update
                 $.ajax({
-                    url: '/Admin/UpdateCourse',
+                    url: '/Course/UpdateCourse',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(payload),

@@ -21,6 +21,27 @@ namespace SIMS.Controllers
             return View();
         }
 
+                public IActionResult Course(int page = 1)
+        {
+            int pageSize = 10;
+            // Include Faculty so server-rendered rows can show FacultyName
+            var query = _db.GetCourses().Include(c => c.Faculty); // IQueryable
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var data = query
+                .OrderBy(c => c.CourseId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.Faculties = _db.GetAllDistinctFaculties();
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPages;
+
+            return View(data);
+        }
+
+
         [HttpGet]
         public IActionResult GetCourseDetails(int id) // Trả về kiểu JSON cho chi tiết học phần được gọi bằng AJAX trong trang Course.cshtml
         {

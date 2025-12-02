@@ -52,11 +52,11 @@
                 <img src="~/icons/dashboard_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Dashboard</span>
             </a>
-            <a asp-controller="Admin" asp-action="StudentList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "StudentList" ? "active" : "")">
+            <a asp-controller="Student" asp-action="StudentList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "StudentList" ? "active" : "")">
                 <img src="~/icons/school_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Students</span>
             </a>
-            <a asp-controller="Admin" asp-action="PeopleList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "PeopleList" ? "active" : "")">
+            <a asp-controller="People" asp-action="PeopleList" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "People" && ViewContext.RouteData.Values["action"]?.ToString() == "PeopleList" ? "active" : "")">
                 <img src="~/icons/person_book_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">People</span>
             </a>
@@ -76,11 +76,11 @@
                 <img src="~/icons/clinical_notes_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Programs</span>
             </a>
-            <a asp-controller="Admin" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Course" ? "active" : "")">
+            <a asp-controller="Course" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Course" && ViewContext.RouteData.Values["action"]?.ToString() == "Course" ? "active" : "")">
                 <img src="~/icons/folder_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Courses</span>
             </a>
-            <a asp-controller="Admin" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Classrooms" ? "active" : "")">
+            <a asp-controller="Course" asp-action="Course" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Course" && ViewContext.RouteData.Values["action"]?.ToString() == "Course" ? "active" : "")">
                 <img src="~/icons/co_present_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" class="menu-icon" />
                 <span class="menu-text">Classrooms</span>
             </a>
