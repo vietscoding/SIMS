@@ -429,11 +429,6 @@ namespace SIMS.Controllers
                 return BadRequest(new { message = "Invalid date of birth." });
             }
 
-            if (!string.IsNullOrWhiteSpace(model.Email) && !validator.IsValidEmail(model.Email))
-            {
-                return BadRequest(new { message = "Invalid email format." });
-            }
-
             if (!string.IsNullOrWhiteSpace(model.PhoneNumber) && !validator.IsValidPhoneNumber(model.PhoneNumber))
             {
                 return BadRequest(new { message = "Invalid phone number format. Expected 0 followed by 9 digits." });

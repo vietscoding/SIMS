@@ -7,11 +7,8 @@
 <h2>People List</h2>
 <div class="actionBtnBox">
     <form></form>
-    <button id="searchBtn" class="btn btn-primary" style="margin-bottom: 1vh;">Search</button>
-    <button id="filterBtn" type="button" class="btn btn-secondary" style="margin-bottom: 1vh;">Filter</button>
-    <button id="addBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add</button>
-    <button id="editBtn" class="btn btn-warning" style="margin-bottom: 1vh;">Edit</button>
-    <button id="deleteBtn" class="btn btn-danger" style="margin-bottom: 1vh;">Delete</button>
+    <button id="filterBtn" type="button" class="btn btn-primary" style="margin-bottom: 1vh;">Filter People</button>
+    <button id="addBtn" class="btn btn-success" style="margin-bottom: 1vh;">Add a New Person</button>
 </div>
 
 <div style="max-width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;">
@@ -127,14 +124,27 @@
                 <label for="filterName" class="form-label">Name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
+            <div class="col-md-6">
+                <label for="filterCitizenIdNumber" class="form-label">Citizen ID contains</label>
+                <input type="text" class="form-control" id="filterCitizenIdNumber" maxlength="12" placeholder="e.g., 012345678901" />
+            </div>
             <div class="col-md-3">
                 <label for="filterGender" class="form-label">Gender</label>
                 <select class="form-select" id="filterGender">
-                    <option value="">Any</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
             </div>
+            <div class="col-md-4">
+                <label for="personDob" class="form-label">Date of Birth (start)</label>
+                <input type="date" class="form-control" id="personDob" />
+            </div>
+            <span>Between</span>
+            <div class="col-md-4">
+                <label for="personDob" class="form-label">Date of Birth (end)</label>
+                <input type="date" class="form-control" id="personDob" />
+            </div>
+
             <div class="col-md-3">
                 <label for="filterNationality" class="form-label">Nationality</label>
                 <input type="text" class="form-control" id="filterNationality" />
@@ -257,7 +267,7 @@
             }
 
             $("#addNewPersonBtn").on("click", function () {
-                alert("Adding new person...");
+                // alert("Adding new person...");
                 const fullName = ($("#personFullName").val() || "").toString().trim();
                 const citizenId = ($("#citizenIdNumber").val() || "").toString().trim();
                 const genderText = ($("#personGender").val() || "").toString().trim();
@@ -282,10 +292,6 @@
                 }
                 if (!isValidDob(dobRaw)) {
                     alert("Please provide a valid Date of Birth.");
-                    return;
-                }
-                if (!isValidEmail(email)) {
-                    alert("Email is not valid.");
                     return;
                 }
                 if (phone && !isValidPhone(phone)) {
