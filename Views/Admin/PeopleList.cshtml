@@ -120,42 +120,51 @@
         <span class="close-modal" id="closeFilterModal">&times;</span>
         <h3>Filter People</h3>
         <div class="row g-3" style="margin-top:12px;">
-            <div class="col-md-6">
+            <div class="col-md-2">
+                <label for="filterPersonId" class="form-label">Id contains</label>
+                <input type="text" class="form-control" id="filterPersonId" />
+            </div>
+            <div class="col-md-5">
                 <label for="filterName" class="form-label">Name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
-            <div class="col-md-6">
+            <div class="col-md-5">
                 <label for="filterCitizenIdNumber" class="form-label">Citizen ID contains</label>
                 <input type="text" class="form-control" id="filterCitizenIdNumber" maxlength="12" placeholder="e.g., 012345678901" />
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="filterGender" class="form-label">Gender</label>
                 <select class="form-select" id="filterGender">
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label for="personDob" class="form-label">Date of Birth (start)</label>
-                <input type="date" class="form-control" id="personDob" />
-            </div>
-            <span>Between</span>
-            <div class="col-md-4">
-                <label for="personDob" class="form-label">Date of Birth (end)</label>
-                <input type="date" class="form-control" id="personDob" />
+            <div class="col-md-5">
+                <label for="filterPersonEmail" class="form-label">Email contains</label>
+                <input type="email" class="form-control" id="ersonEmail" placeholder="example@domain.com" />
             </div>
 
-            <div class="col-md-3">
-                <label for="filterNationality" class="form-label">Nationality</label>
-                <input type="text" class="form-control" id="filterNationality" />
+            <div class="col-md-5">
+                <label for="filterPersonPhone" class="form-label">Phone Number contains</label>
+                <input type="text" class="form-control" id="filterPersonPhone" maxlength="10" placeholder="e.g., 0923456789" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="filterPersonDobStart" class="form-label">Date of Birth (start)</label>
+                <input type="date" class="form-control" id="filterPersonDobStart" />
             </div>
             <div class="col-md-6">
-                <label for="filterEmail" class="form-label">Email contains</label>
-                <input type="text" class="form-control" id="filterEmail" />
+                <label for="filterPersonDobEnd" class="form-label">Date of Birth (end)</label>
+                <input type="date" class="form-control" id="filterPersonDobEnd" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="filterNationality" class="form-label">Nationality contains</label>
+                <input type="text" class="form-control" id="filterNationality" value="Vietnamese" />
             </div>
             <div class="col-md-6">
-                <label for="filterCitizenId" class="form-label">Citizen ID contains</label>
-                <input type="text" class="form-control" id="filterCitizenId" />
+                <label for="filterAddress" class="form-label">Address contains</label>
+                <input type="text" class="form-control" id="filterAddress" />
             </div>
             <div class="col-12" style="margin-top:8px;">
                 <button id="applyFilterBtn" type="button" class="btn btn-primary">Apply</button>
@@ -220,13 +229,24 @@
             });
 
             $("#clearFilterBtn").on("click", function() {
+                $("#filterPersonId").val("");
                 $("#filterName").val("");
-                $("#filterGender").val("");
-                $("#filterNationality").val("");
-                $("#filterEmail").val("");
+                $("#filterCitizenIdNumber").val("");
+                $("#filterGender").val("Male");
+                $("#filterPersonEmail").val("");
+                $("#filterPersonPhone").val("");
+                $("#filterPersonDobStart").val("");
+                $("#filterPersonDobEnd").val("");
+                $("#filterNationality").val("Vietnamese");
                 $("#filterCitizenId").val("");
+                $("#filterAddress").val("");
+                filters = {};
                 $("#filterBtn").removeClass("has-active-filters");
             });
+
+            // Infinite scroll and filter setup
+            // Render server values as numeric literals
+            let currentPages = @
 
             // Add Person modal handlers
             $("#addBtn").on("click", function () {
