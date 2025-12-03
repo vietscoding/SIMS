@@ -53,7 +53,7 @@ namespace SIMS.Controllers
             string? phoneNumber = null,
             string? address = null,
             string? nationality = null
-            
+
             )
         {
             int pageSize = 10;
@@ -70,40 +70,40 @@ namespace SIMS.Controllers
             if (!string.IsNullOrWhiteSpace(citizenIdNumber))
             {
                 var term = citizenIdNumber.Trim();
-                query = query.Where(p => (p.CitizenIdNumber?? string.Empty).Contains(term));
+                query = query.Where(p => (p.CitizenIdNumber ?? string.Empty).Contains(term));
             }
 
             if (!string.IsNullOrWhiteSpace(email))
             {
                 var term = email.Trim();
-                query = query.Where(p => (p.Email?? string.Empty).Contains(term));
+                query = query.Where(p => (p.Email ?? string.Empty).Contains(term));
             }
 
             if (!string.IsNullOrWhiteSpace(phoneNumber))
             {
                 var term = phoneNumber.Trim();
-                query = query.Where(p => (p.PhoneNumber?? string.Empty).Contains(term));
+                query = query.Where(p => (p.PhoneNumber ?? string.Empty).Contains(term));
             }
 
             if (!string.IsNullOrWhiteSpace(nationality))
             {
                 var term = nationality.Trim();
-                query = query.Where(p => (p.Nationality?? string.Empty).Contains(term));
+                query = query.Where(p => (p.Nationality ?? string.Empty).Contains(term));
             }
 
-            if (gender.HasValue) 
-            { 
+            if (gender.HasValue)
+            {
                 query = query.Where(p => p.Gender == gender.Value);
             }
 
-            if (dateOfBirthStart.HasValue) 
+            if (dateOfBirthStart.HasValue)
             {
                 query = query.Where(p => p.DateOfBirth >= dateOfBirthStart.Value);
             }
 
             if (dateOfBirthEnd.HasValue)
             {
-               
+
                 query = query.Where(p => p.DateOfBirth <= dateOfBirthEnd.Value);
             }
 
@@ -123,8 +123,8 @@ namespace SIMS.Controllers
 
             return Json(new
             {
-                 people = data.Select(p => new 
-                 {
+                people = data.Select(p => new
+                {
                     personId = p.PersonId,
                     fullName = p.FullName,
                     citizenIdNumber = p.CitizenIdNumber,
@@ -219,5 +219,37 @@ namespace SIMS.Controllers
                 }
             });
         }
+
+        [HttpGet]
+        public IActionResult GetPersonDetails(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "Invalid Person ID." });
+            }
+
+            var person = _db.GetPeople()
+                .AsNoTracking()
+                .FirstOrDefault(p => p.PersonId == id);
+
+            if (person == null || person.PersonId == 0)
+            {
+                return NotFound(new { message = "Person not found." });
+            }
+            return Json(new
+            {
+                personId = person.PersonId,
+                fullName = person.FullName,
+                citizenIdNumber = person.CitizenIdNumber,
+                gender = person.Gender,
+                dateOfBirth = person.DateOfBirth,
+                email = person.Email,
+                phoneNumber = person.PhoneNumber,
+                address = person.Address,
+                nationality = person.Nationality
+
+            });
+        }
+
     }
 }
