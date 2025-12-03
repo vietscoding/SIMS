@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SIMS.Data;
 using Microsoft.AspNetCore.Mvc;
-using SIMS.Data;
-using SIMS.ViewModels;
-using SIMS.Models;
-using System.Linq;
-using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using SIMS.Data;
+using SIMS.Data;
+using SIMS.Models;
+using SIMS.ViewModels;
+using System;
+using System.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SIMS.Controllers
 {
@@ -23,10 +25,120 @@ namespace SIMS.Controllers
             return View();
         }
 
-        public IActionResult PeopleList()
+        public IActionResult PeopleList(int page = 1)
         {
-            var people = _db.GetAllPeople();
-            return View(people);
+            int pageSize = 10;
+            var query = _db.GetPeople();
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var data = query
+                .OrderBy(p => p.PersonId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPages;
+            return View(data);
+        }
+
+        [HttpGet]
+        public IActionResult GetPeople(
+            int page = 1,
+            string? name = null,
+            string? citizenIdNumber = null,
+            bool? gender = null,
+            DateTime? dateOfBirthStart = null,
+            DateTime? dateOfBirthEnd = null,
+            string? email = null,
+            string? phoneNumber = null,
+            string? address = null,
+            string? nationality = null
+            
+            )
+        {
+            int pageSize = 10;
+            var query = _db.GetPeople().AsQueryable();
+
+            //query = query.Where(p => !p.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var term = name.Trim();
+                query = query.Where(p => (p.FullName ?? string.Empty).Contains(term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(citizenIdNumber))
+            {
+                var term = citizenIdNumber.Trim();
+                query = query.Where(p => (p.CitizenIdNumber?? string.Empty).Contains(term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var term = email.Trim();
+                query = query.Where(p => (p.Email?? string.Empty).Contains(term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                var term = phoneNumber.Trim();
+                query = query.Where(p => (p.PhoneNumber?? string.Empty).Contains(term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(nationality))
+            {
+                var term = nationality.Trim();
+                query = query.Where(p => (p.Nationality?? string.Empty).Contains(term));
+            }
+
+            if (gender.HasValue) 
+            { 
+                query = query.Where(p => p.Gender == gender.Value);
+            }
+
+            if (dateOfBirthStart.HasValue) 
+            {
+                query = query.Where(p => p.DateOfBirth >= dateOfBirthStart.Value);
+            }
+
+            if (dateOfBirthEnd.HasValue)
+            {
+               
+                query = query.Where(p => p.DateOfBirth <= dateOfBirthEnd.Value);
+            }
+
+            if (!address.IsNullOrEmpty())
+            {
+                query = query.Where(p => (p.Address ?? "").Contains(address.Trim()));
+            }
+
+
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var data = query
+                .OrderBy(p => p.PersonId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Json(new
+            {
+                 people = data.Select(p => new 
+                 {
+                    personId = p.PersonId,
+                    fullName = p.FullName,
+                    citizenIdNumber = p.CitizenIdNumber,
+                    gender = p.Gender,
+                    dateOfBirth = p.DateOfBirth,
+                    email = p.Email,
+                    phoneNumber = p.PhoneNumber,
+                    address = p.Address,
+                    nationality = p.Nationality
+                }),
+                currentPage = page,
+                totalPages = totalPages,
+                totalItems = totalItems,
+            });
         }
 
         [HttpPost]
@@ -81,8 +193,8 @@ namespace SIMS.Controllers
             }
 
             // Timestamps and defaults
-            model.Created = DateTime.Now;
-            model.Updated = DateTime.Now;
+            model.CreatedAt = DateTime.Now;
+            model.UpdatedAt = DateTime.Now;
 
             var added = _db.AddPerson(model);
             if (!added)

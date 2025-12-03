@@ -21,9 +21,6 @@ namespace SIMS.Controllers
         {
             return View();
         }
-        
-        
-        
 
         // New endpoint to create a person via AJAX (expects JSON body)
 

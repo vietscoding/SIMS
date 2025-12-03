@@ -17,6 +17,7 @@
         <thead>
             <tr>
                 <th>Action</th>
+                <th>No.</th>
                 <th>Person ID</th>
                 <th>Full Name</th>
                 <th>Citizen ID</th>
@@ -29,12 +30,16 @@
             </tr>
         </thead>
         <tbody>
+            @{
+                int stt = 1;
+            }
             @foreach (var p in Model)
             {
                 <tr>
                     <td>
                         <button class="btn btn-info btn-sm view-details" data-id="@p.PersonId">View</button>
                     </td>
+                    <td>@stt</td>
                     <td>@p.PersonId</td>
                     <td>
                         <a href="#" class="view-details" data-id="@p.PersonId">
@@ -43,12 +48,14 @@
                     </td>
                     <td>@p.CitizenIdNumber</td>
                     <td>@(p.Gender.HasValue ? (p.Gender.Value ? "Male" : "Female") : "N/A")</td>
-                    <td>@(p.DateOfBirth.HasValue? p.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                    @* <td>@(p.DateOfBirth.HasValue? p.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td> *@
+                    <td>@(p.DateOfBirth.HasValue? p.DateOfBirth.Value.ToString("dd/MM/yyyy") : "N/A")</td>
                     <td>@p.Email</td>
                     <td>@p.PhoneNumber</td>
                     <td>@p.Address</td>
                     <td>@p.Nationality</td>
                 </tr>
+                stt++;
             }
         </tbody>
     </table>
@@ -120,11 +127,11 @@
         <span class="close-modal" id="closeFilterModal">&times;</span>
         <h3>Filter People</h3>
         <div class="row g-3" style="margin-top:12px;">
-            <div class="col-md-2">
+            @* <div class="col-md-2">
                 <label for="filterPersonId" class="form-label">Id contains</label>
                 <input type="text" class="form-control" id="filterPersonId" />
-            </div>
-            <div class="col-md-5">
+            </div> *@
+            <div class="col-md-7">
                 <label for="filterName" class="form-label">Name contains</label>
                 <input type="text" class="form-control" id="filterName" />
             </div>
@@ -135,13 +142,14 @@
             <div class="col-md-2">
                 <label for="filterGender" class="form-label">Gender</label>
                 <select class="form-select" id="filterGender">
+                    <option value="any">Any</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
             </div>
             <div class="col-md-5">
                 <label for="filterPersonEmail" class="form-label">Email contains</label>
-                <input type="email" class="form-control" id="ersonEmail" placeholder="example@domain.com" />
+                <input type="email" class="form-control" id="filterPersonEmail" placeholder="example@domain.com" />
             </div>
 
             <div class="col-md-5">
@@ -160,7 +168,7 @@
 
             <div class="col-md-6">
                 <label for="filterNationality" class="form-label">Nationality contains</label>
-                <input type="text" class="form-control" id="filterNationality" value="Vietnamese" />
+                <input type="text" class="form-control" id="filterNationality" />
             </div>
             <div class="col-md-6">
                 <label for="filterAddress" class="form-label">Address contains</label>
@@ -186,6 +194,22 @@
                 alert("View person details for ID: " + personId + " (chưa có logic).");
             });
 
+            $(document).on("keydown", function (e) {
+                if (e.key === "Escape") {
+                    $("#addCourseModal").hide(); // Đóng modal add course khi nhấn esc
+                    $("#courseDetailsModal").hide(); // Đóng modal course details khi nhấn esc
+                    $("#filterModal").hide(); // Đóng modal filter khi nhấn esc
+                    $("#updateCourseModal").hide(); // Đóng modal filter khi nhấn esc
+                }
+            });
+
+            // Khi user đang trong modal filter people nhấn Enter để submit
+            $(document).on("keydown", function (e) {
+                if (e.key === "Enter" && $("#filterModal").is(":visible")) {
+                    $("#applyFilterBtn").click();
+                }
+            });
+
             // Filter modal open/close
             $("#filterBtn").on("click", function() {
                 $("#filterModal").css("display", "flex");
@@ -200,34 +224,6 @@
                 }
             });
 
-            // Filter handlers
-            $("#applyFilterBtn").on("click", function() {
-                const filters = {
-                    name: $("#filterName").val(),
-                    gender: $("#filterGender").val(),
-                    nationality: $("#filterNationality").val(),
-                    email: $("#filterEmail").val(),
-                    citizenId: $("#filterCitizenId").val()
-                };
-                console.log("Apply filters:", filters);
-                $("#filterModal").hide();
-                // TODO: Hook up to server-side filtering or client-side filtering as needed
-
-                // Toggle filter indicator (red dot) if any filter is set
-                const anyFilter =
-                    (filters.name && filters.name.trim().length > 0) ||
-                    (filters.gender && filters.gender.trim().length > 0) ||
-                    (filters.nationality && filters.nationality.trim().length > 0) ||
-                    (filters.email && filters.email.trim().length > 0) ||
-                    (filters.citizenId && filters.citizenId.trim().length > 0);
-
-                if (anyFilter) {
-                    $("#filterBtn").addClass("has-active-filters");
-                } else {
-                    $("#filterBtn").removeClass("has-active-filters");
-                }
-            });
-
             $("#clearFilterBtn").on("click", function() {
                 $("#filterPersonId").val("");
                 $("#filterName").val("");
@@ -237,16 +233,158 @@
                 $("#filterPersonPhone").val("");
                 $("#filterPersonDobStart").val("");
                 $("#filterPersonDobEnd").val("");
-                $("#filterNationality").val("Vietnamese");
-                $("#filterCitizenId").val("");
+                $("#filterNationality").val("Vietnam");
                 $("#filterAddress").val("");
                 filters = {};
                 $("#filterBtn").removeClass("has-active-filters");
+                resetAndLoad();
             });
 
             // Infinite scroll and filter setup
             // Render server values as numeric literals
-            let currentPages;
+            let currentPage = @(ViewBag.Page ?? 0);
+            let totalPages = @(ViewBag.TotalPages ?? 1);
+            let isLoading = false;
+            let sttCounter = @(Model.Count);
+            let filters = {};
+
+            console.log("Infinite scroll state on load:", { currentPage, totalPages, sttCounter });
+
+            // If the page doesn'target have enough contentType (no scrollbar), auto-load until fullName or out of pages
+            function autoFillIfNeeded() {
+                if ($(document).height() <= $(window).height() && currentPage < totalPages) {
+                    console.log("Auto-loading next page because content is short.");
+                    loadMorePeople();
+                }
+            }
+
+            // Hàm kiểm tra tính hợp lệ của phạm vi ngày tháng (DobStart không được sau DobEnd)
+            function validateDateRange(startSelector, endSelector, fieldName) {
+                const startVal = $(startSelector).val();
+                const endVal = $(endSelector).val();
+                const $startInput = $(startSelector);
+                const $endInput = $(endSelector);
+
+                // Xóa lớp 'is-invalid' cũ
+                $startInput.removeClass("is-invalid");
+                $endInput.removeClass("is-invalid");
+
+                if (startVal && endVal) {
+                    const startDate = new Date(startVal);
+                    const endDate = new Date(endVal);
+
+                    // So sánh ngày (chỉ cần so sánh timestamp)
+                    if (startDate > endDate) {
+                        alert(`Lỗi: Ngày bắt đầu (${fieldName} Start) không thể sau Ngày kết thúc (${fieldName} End).`);
+                        $startInput.addClass("is-invalid");
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            // Function to reset table and reload data
+            function resetAndLoad() {
+                $("tbody").empty();
+                sttCounter = 0;
+                currentPage = 0;
+                totalPages = 1; // Reset to trigger load
+                loadMorePeople();
+            }
+
+            // Load more courses function
+            function loadMorePeople() {
+                if (isLoading) {
+                    console.log("Skipped loadMorePeople() because already loading.");
+                    return;
+                }
+                if (currentPage >= totalPages) {
+                    console.log("No more pages to load. currentPage:", currentPage, "totalPages:", totalPages);
+                    return;
+                }
+
+                // 1. Đặt isLoading = true
+                isLoading = true;
+                currentPage++;
+
+                console.log("Requesting page", currentPage, "with filters", filters);
+
+                $.ajax({
+                    url: "/People/GetPeople",
+                    method: "GET",
+                    data: Object.assign({ page: currentPage}, filters),
+                    success: function (data) {
+                        console.log("GetPeople success for page", currentPage, data);
+
+                        // Cập nhật tổng số trang từ phản hồi
+                        // if (data.totalPages) totalPages = data.totalPages;
+
+                        if (data.people && data.people.length > 0) {
+                            let html = '';
+                            data.people.forEach(function (p) {
+                                sttCounter++;
+                                // Cập nhật logic render với tên thuộc tính chính xác (ví dụ: fullName thay vì personId)
+                                let displayGender = (p.gender === true) ? "Male" : ((p.gender === false) ? "Female" : "N/A");
+                                let displayDateOfBirth = p.dateOfBirth ? new Date(p.dateOfBirth).toLocaleDateString('vi-VN') : "N/A";
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <button class="btn btn-info btn-sm view-details" data-id="${p.personId}">View</button>
+                                        </td>
+                                        <td>${sttCounter}</td>
+                                        <td>${p.personId}</td>
+                                        <td>
+                                            <a href="#" class="view-details" data-id="${p.personId}">
+                                                ${p.fullName ?? 'N/A'}
+                                            </a>
+                                        </td>
+                                        <td>${p.citizenIdNumber ?? 'N/A'}</td>
+                                        <td>${displayGender}</td>
+                                        <td>${displayDateOfBirth}</td>
+                                        <td>${p.email ?? 'N/A'}</td>
+                                        <td>${p.phoneNumber ?? 'N/A'}</td>
+                                        <td>${p.address ?? 'N/A'}</td>
+                                        <td>${p.nationality ?? 'N/A'}</td>
+                                    </tr>
+                                `;
+                            });
+                            $("tbody").append(html);
+                            totalPages = data.totalPages || totalPages;
+                            console.log("Updated totalPages:", totalPages);
+
+                        } else {
+                            totalPages = currentPage; // Dừng tải nếu không còn dữ liệu
+                            console.log("No more courses in response for page", currentPage);
+                        }
+                    },
+                    error: function (xhr, status, err) {
+                        console.error("Error loading more people", status, err, xhr);
+                        // currentPage--; Hoàn tác trang nếu lỗi
+                        isLoading = false;
+                    },
+                    // 2. ĐẶT LẠI isLoading trong COMPLETE BLOCK
+                    complete: function () {
+                        isLoading = false; // Đảm bảo cờ luôn được đặt lại
+                        autoFillIfNeeded(); // Gọi kiểm tra tự động điền sau khi tải xong
+                    }
+                });
+            }
+
+            // Scroll event listener (throttle basic)
+            let scrollTimer = null;
+            $(window).on('scroll', function() {
+                if (scrollTimer) return;
+                scrollTimer = setTimeout(function() {
+                    scrollTimer = null;
+                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+                        loadMorePeople();
+                    }
+                }, 150);
+            });
+
+            autoFillIfNeeded();
+
+
 
             // Add Person modal handlers
             $("#addBtn").on("click", function () {
@@ -269,6 +407,70 @@
                 if (e.target === this) {
                     $(this).hide();
                 }
+            });
+
+            $("#applyFilterBtn").on("click", function() {
+                // 1. Validation (chỉ kiểm tra phạm vi ngày sinh)
+                const dateRangeValid = validateDateRange("#filterPersonDobStart", "#filterPersonDobEnd", "Date of Birth");
+
+                if (!dateRangeValid) {
+                    // Tập trung vào input không hợp lệ đầu tiên nếu có
+                    const $firstInvalid = $(".is-invalid").first();
+                    if ($firstInvalid.length) $firstInvalid.focus();
+                    return; // Dừng lại - không áp dụng bộ lọc
+                }
+
+                // 2. Thu thập và xây dựng đối tượng filters
+                filters = {};
+
+                // Lấy giá trị từ các trường nhập liệu
+                const personId = $("#filterPersonId").val()?.toString().trim();
+                const name = $("#filterName").val()?.toString().trim();
+                const citizenId = $("#filterCitizenIdNumber").val()?.toString().trim();
+                const gender = $("#filterGender").val()?.toString().trim();
+                // CHÚ Ý: ID của trường email trong HTML là 'ersonEmail', cần đảm bảo chính xác
+                const email = $("#filterPersonEmail").val()?.toString().trim();
+                const phone = $("#filterPersonPhone").val()?.toString().trim();
+                const dobStart = $("#filterPersonDobStart").val()?.toString().trim();
+                const dobEnd = $("#filterPersonDobEnd").val()?.toString().trim();
+                const nationality = $("#filterNationality").val()?.toString().trim();
+                const address = $("#filterAddress").val()?.toString().trim();
+
+                // Thêm vào đối tượng filters nếu giá trị không rỗng
+                if (personId) filters.personId = personId;
+                if (name) filters.name = name;
+                if (citizenId) filters.citizenIdNumber = citizenId;
+
+                // Vì dropdown Gender không có tùy chọn 'Any', nó sẽ luôn có giá trị 'Male' hoặc 'Female'.
+                // Chúng ta chỉ áp dụng nếu giá trị được chọn không phải là giá trị mặc định có thể gây hiểu nhầm,
+                // nhưng để đơn giản, ta sẽ luôn gửi đi nếu nó có giá trị.
+                if (gender === "Male") {
+                    filters.gender = true;
+                }
+                else if (gender === "Female") {
+                    filters.gender = false;
+                }
+                else {
+                    filters.gender = null;
+                }
+                if (email) filters.email = email;
+                if (phone) filters.phone = phone;
+                if (dobStart) filters.dobStart = dobStart;
+                if (dobEnd) filters.dobEnd = dobEnd;
+                if (nationality) filters.nationality = nationality;
+                if (address) filters.address = address;
+
+                // 3. Cập nhật trạng thái nút Filter (thêm/xóa chấm đỏ)
+                const anyFilter = Object.keys(filters).length > 0;
+                if (anyFilter) {
+                    $("#filterBtn").addClass("has-active-filters");
+                } else {
+                    $("#filterBtn").removeClass("has-active-filters");
+                }
+
+                // 4. Ẩn modal và tải lại dữ liệu với bộ lọc mới
+                $("#filterModal").hide();
+                resetAndLoad();
             });
 
             function isValidCitizenId(id) {
@@ -334,7 +536,7 @@
                 $("#addNewPersonBtn").prop("disabled", true).text("Adding...");
 
                 $.ajax({
-                    url: "/Admin/AddPerson",
+                    url: "/People/AddPerson",
                     method: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(payload),
@@ -357,6 +559,7 @@
                     }
                 });
             });
+
 
             // Test notifications cho các nút hành động
             $("#searchBtn").click(function () {

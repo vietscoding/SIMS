@@ -45,7 +45,7 @@ namespace SIMS.Controllers
                 CourseDependencies = courseDependencies
             };
 
-            return View("Views/Admin/ProgramDetail.cshtml", model);
+            return View("Views/AcademicProgram/ProgramDetail.cshtml", model);
         }
 
         // POST: /ProgramDetail/AddCurriculum

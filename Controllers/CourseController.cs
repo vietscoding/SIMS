@@ -21,7 +21,7 @@ namespace SIMS.Controllers
             return View();
         }
 
-                public IActionResult Course(int page = 1)
+        public IActionResult Course(int page = 1)
         {
             int pageSize = 10;
             // Include Faculty so server-rendered rows can show FacultyName
