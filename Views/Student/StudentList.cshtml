@@ -139,24 +139,25 @@
             </div>
 
         </div>
+        <hr />
         <div class="row g-3" style="margin-top:12px;">
             <div class="col-md-6">
                 <label for="addStudentCode" class="form-label">Student Code</label>
                 <input type="text"
                        class="form-control"
                        id="courseCode"
-                       placeholder="Exactly 7 digits (e.g., 1234567)"
-                       maxlength="7"
-                       pattern="[0-9]{7}" />
+                       placeholder=""
+                       @* maxlength="" *@
+                       pattern="" />
             </div>
             <div class="col-md-6">
-                <label for="facultyInCharge" class="form-label">Program</label>
+                <label for="addStudentProgram" class="form-label">Program</label>
                 <input type="text"
                        class="form-control"
-                       id="facultyInCharge"
-                       list="facultyInChargeList"
+                       id="addStudentProgram"
+                       list="StudentProgramList"
                        placeholder="(e.g., Faculty of Information Technology)" />
-                <datalist id="facultyInChargeList">
+                <datalist id="StudentProgramList">
                     @{
                         var programs = Model.Programs;
                         foreach (var p in programs)
@@ -166,7 +167,7 @@
                     }
 
                 </datalist>
-                <input type="hidden" id="facultyId" name="facultyId" value="" />
+                <input type="hidden" id="programId" name="programId" value="" />
             </div>
 
             <div class="col-md-4">
@@ -174,25 +175,15 @@
                 <input type="date" class="form-control" id="updateDob" />
             </div>
 
-
-
-            @* <div class="col-md-3">
-                <label for="capstoneCredits" class="form-label">Current Semester</label>
-                <input type="number"
-                       class="form-control"
-                       id="capstoneCredits"
-                       placeholder="(e.g., 2.0)"
-                       value="0"
-                       min="0"
-                       step="1" />
+            <div class="col-md-6">
+                <label for="addPhoneRelative" class="form-label">Relatives' Phone</label>
+                <input type="text" class="form-control" id="addPhone" maxlength="10" placeholder="e.g., 0123456789" />
             </div>
-
-
-            gpa
-            credits_earned
-            expected_graduate_date
-            phone_number_of_relatives *@
-
+       
+            <div class="col-12" style="margin-top:20px;">
+                <button id="addNewStudentBtn" type="button" class="btn btn-success">Add</button>
+                <button id="cancelAddNewStudentBtn" type="button" class="btn btn-outline-danger">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -237,12 +228,204 @@
     <script src="/js/StudentList.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Bootstrap 5 modal instance
-            const studentModalElement = document.getElementById('studentDetailModal');
 
-            $(".view-details").click(function(e) {
+            // Initialize Bootstrap 5 modal instance
+            // const studentModalElement = document.getElementById('studentDetailModal');
+
+            $("#addBtn").on("click", function () {
+                // const inputVal = this.value;
+
+                // const option = $("#StudentProgramList option").filter(function () {
+                //     return this.value === inputVal;
+                // });
+
+                // const programId = option.data("id") ?? null;
+
+                // $("#programId").val(programId);
+
+                // const val = ($("#addGender").val() ?? "").toString().trim().toLowerCase();
+                // let gender = val === "male" ? 1 : val === "female" ? 0 : null;
+
+                // const name = $("#addStudentName").val()?.toString().trim() || "";
+                // const citizenId = $("#addCitizenIdNumber").val()?.toString().trim() || "";
+                // const gender = gender;
+                // const dob = $("#addDob").val();
+                // const email = $("#addEmail").val()?.toString().trim() || "";
+                // const phone = $("#addPhone").val()?.toString().trim() || "";
+                // const address = $("#addAddress").val()?.toString().trim() || "";
+                // const nationality = $("#addNationality").val()?.toString().trim() || "";
+                // const studentCode = $("#addStudentCode").val()?.toString().trim() || "";
+                // const studentProgram = programId;
+                // const enrollmentDate = $("#addEnrollmentDate").val();
+                // const phoneRelative = $("#addPhoneRelative").val()?.toString().trim() || "";
+
+                        // ✅ LẤY PROGRAM ID TỪ DATALIST
+                const inputVal = $("#addStudentProgram").val().trim();
+
+                const option = $("#StudentProgramList option").filter(function () {
+                    return this.value === inputVal;
+                });
+
+                const programId = option.length ? option.data("id") : null;
+                $("#programId").val(programId ?? "");
+
+                // ✅ XỬ LÝ GENDER
+                const val = ($("#addGender").val() ?? "").toString().trim().toLowerCase();
+                const genderValue = val === "male" ? 1 : val === "female" ? 0 : null;
+
+                // ✅ GOM DỮ LIỆU
+                const name = $("#addStudentName").val()?.toString().trim() || "";
+                const citizenId = $("#addCitizenIdNumber").val()?.toString().trim() || "";
+                const dob = $("#addDob").val();
+                const email = $("#addEmail").val()?.toString().trim() || "";
+                const phone = $("#addPhone").val()?.toString().trim() || "";
+                const address = $("#addAddress").val()?.toString().trim() || "";
+                const nationality = $("#addNationality").val()?.toString().trim() || "";
+                const studentCode = $("#addStudentCode").val()?.toString().trim() || "";
+                const enrollmentDate = $("#addEnrollmentDate").val();
+                const phoneRelative = $("#addPhoneRelative").val()?.toString().trim() || "";
+
+                // --- Helper Validation Functions ---
+
+                /**
+                 * Checks for a valid Email format.
+                 * @@param {string} email
+                 * @@returns {boolean}
+                 */
+                const isValidEmail = (email) => {
+                    const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                    return emailRegex.test(email);
+                };
+
+                /**
+                 * Checks for a valid Date format (YYYY-MM-DD).
+                 * @@param {string} date
+                 * @@returns {boolean}
+                 */
+                const isValidDate = (date) => {
+                    return /^\d{4}-\d{2}-\d{2}$/.test(date);
+                };
+
+
+                // --- START VALIDATION USING IF...ELSE ---
+                function validateStudentData() {
+                    // 1. Check Name
+                    if (!name) {
+                        return "Student name cannot be empty.";
+                    }
+
+                    // 2. Check Program/Course ID
+                    if (!programId) {
+                        return "Please select a valid Program/Course from the list.";
+                    }
+
+                    // 3. Check Gender Value
+                    if (genderValue === null) {
+                        return "Invalid gender value. Please select Male or Female.";
+                    }
+
+                    // 4. Check Student Code
+                    if (!studentCode) {
+                        return "Student Code cannot be empty.";
+                    }
+
+                    // 5. Check Enrollment Date
+                    if (!enrollmentDate) {
+                        return "Enrollment Date cannot be empty.";
+                    } else if (!isValidDate(enrollmentDate)) {
+                        return "Enrollment Date is in an invalid format (YYYY-MM-DD expected).";
+                    }
+
+                    // 6. Check Citizen ID
+                    if (!citizenId) {
+                        return "Citizen ID / Passport Number cannot be empty.";
+                    } else if (citizenId.length < 9 || citizenId.length > 12) {
+                        // Basic length check for common IDs (9 or 12 digits)
+                        return "Citizen ID / Passport Number is invalid (expected 9-12 characters).";
+                    }
+
+                    // 7. Check Date of Birth
+                    if (!dob) {
+                        return "Date of Birth cannot be empty.";
+                    } else if (!isValidDate(dob)) {
+                        return "Date of Birth is in an invalid format (YYYY-MM-DD expected).";
+                    }
+
+                    // 8. Check Email
+                    if (!email) {
+                        return "Email cannot be empty.";
+                    } else if (!isValidEmail(email)) {
+                        return "Email address is invalid.";
+                    }
+
+                    // 9. Check Phone Number
+                    if (!phone) {
+                        return "Personal Phone Number cannot be empty.";
+                    } else if (phone.length < 10 || isNaN(Number(phone))) {
+                        return "Personal Phone Number is invalid.";
+                    }
+
+                    // 10. Check Nationality
+                    if (!nationality) {
+                        return "Nationality cannot be empty.";
+                    }
+
+                    // 11. Check Address
+                    if (!address) {
+                        return "Address cannot be empty.";
+                    }
+
+                    // 12. Check Relative's Phone (Optional check)
+                    if (phoneRelative && (phoneRelative.length < 10 || isNaN(Number(phoneRelative)))) {
+                        return "Relative's Phone Number is invalid.";
+                    }
+
+                    // If all checks pass
+                    return "SUCCESS";
+                }
+
+                // --- USAGE EXAMPLE ---
+
+                const validationResult = validateStudentData();
+
+                if (validationResult === "SUCCESS") {
+                    // Data is valid, proceed with form submission or saving
+                    console.log("Data is valid and ready to be submitted.");
+                } else {
+                    // Data is NOT valid, display the appropriate error message
+                    alert("Error: " + validationResult);
+                    console.error("Error: " + validationResult);
+                }
+
+                const paypload = {
+                    name: name,
+                    citizenId: citizenId,
+                    programId: programId,
+                    gender: genderValue,
+                    dob: dob,
+                    email: email,
+                    phone: phone,
+                    address: address,
+                    nationality: nationality,
+                    studentCode: studentCode,
+                    enrollmentDate: enrollmentDate,
+                    phoneRelative: phoneRelative
+                };
+
+                $("#addNewStudentBtn").prop("disabled", true).text("Adding...");
+
+                $.ajax({
+                    url: "/Student/AddStudent",
+
+                });
+            });
+
+
+            $(document).on("click", ".view-details", function (e) {
                 e.preventDefault();
                 const studentId = $(this).data("id");
+
+                $("#addStudentModal").css("display", "flex");
 
                 // $.get("/Student/GetStudentById", { id: studentId }, function(data) {
                 //     $("#studentId").val(data.studentId);
@@ -289,14 +472,14 @@
             });
 
             // Filter modal open/close
-            $("#filterBtn").on("click", function() {
-                $("#filterModal").css("display", "flex");
+            $("#addBtn").on("click", function() {
+                $("#addStudentModal").css("display", "flex");
             });
-            $("#closeFilterModal").on("click", function() {
-                $("#filterModal").hide();
+            $("#closeAddStudentModal").on("click", function() {
+                $("#addStudentModal").hide();
             });
             // Close when clicking outside content
-            $("#filterModal").on("click", function(e) {
+            $("#addStudentModal").on("click", function(e) {
                 if (e.target === this) {
                     $(this).hide();
                 }
@@ -336,8 +519,50 @@
                 $("#filterProgram").val("");
                 $("#filterBtn").removeClass("has-active-filters");
             });
+
+                        // Scroll event listener (throttle basic)
+            let scrollTimer = null;
+            $(window).on('scroll', function() {
+                if (scrollTimer) return;
+                scrollTimer = setTimeout(function() {
+                    scrollTimer = null;
+                    if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+                        loadMoreCourses();
+                    }
+                }, 150);
+            });
+
+            autoFillIfNeeded();
+
+                        // Infinite scroll and filter setup
+            // Render server values as numeric literals
+            let currentPage = @(ViewBag.Page ?? 1);
+            let totalPages = @(ViewBag.TotalPages ?? 1);
+            let isLoading = false;
+            // Start STT counter at number of rows already rendered by server (Model.Count)
+            let sttCounter = @(Model.Students.Count);
+            let filters = {}; // Global filters object
+
+            console.log("Infinite scroll state on load:", { currentPage, totalPages, sttCounter });
+
+            // If the page doesn't have enough content (no scrollbar), auto-load until full or out of pages
+            function autoFillIfNeeded() {
+                if ($(document).height() <= $(window).height() && currentPage < totalPages) {
+                    console.log("Auto-loading next page because content is short.");
+                    loadMoreCourses();
+                }
+            }
+
+            // Function to reset table and reload data
+            function resetAndLoad() {
+                $("tbody").empty();
+                sttCounter = 0;
+                currentPage = 0;
+                totalPages = 1; // Reset to trigger load
+                loadMoreCourses();
+            }
+
         });
-        // Test notifications cho các nút hành động
     </script>
 }
 

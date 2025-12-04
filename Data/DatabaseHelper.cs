@@ -202,6 +202,7 @@ namespace SIMS.Data
                 .FirstOrDefault(p => p.PersonId == personId) ?? new Person();
         }
 
+
         public Faculty GetFacultyById(int facultyId) // Lấy khoa theo ID
         {
             return _context.Faculties
