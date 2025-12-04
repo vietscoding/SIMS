@@ -2,6 +2,8 @@
 using SIMS.Data;
 using SIMS.Models;
 using SIMS.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace SIMS.Controllers
 {
@@ -18,20 +20,43 @@ namespace SIMS.Controllers
             return View("~/Index.cshtml");
         }
 
-        public IActionResult StudentList()
+        public IActionResult StudentList(int page = 1)
         {
-            var students = _db.GetAllStudents();
-            return View("StudentList", students);
-        }
-        public IActionResult StudentList2()
-        {
-            var studentDetailsList = new StudentDetailsViewModel
+            int pageSize = 10;
+            var query = _db.GetAllStudents()
+                .Include(s => s.Program)
+                .Include(s => s.Person);
+
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems/ pageSize);
+
+            var data = query
+                .OrderBy(s => s.StudentId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new StudentDetailsViewModel
             {
-                Students = _db.GetAllStudents(),
+                Students = data,
                 Programs = _db.GetAllAcademicPrograms()
             };
-            return View("StudentList2", studentDetailsList);
+
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPages;
+
+            return View(result);
+
         }
+        //public IActionResult StudentList2()
+        //{
+        //    var studentDetailsList = new StudentDetailsViewModel
+        //    {
+        //        Students = _db.GetAllStudents(),
+        //        Programs = _db.GetAllAcademicPrograms()
+        //    };
+        //    return View("StudentList2", studentDetailsList);
+        //}
 
         public IActionResult Create()
         {

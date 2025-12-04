@@ -39,13 +39,17 @@ namespace SIMS.Data
 
 
         
-        public List<Student> GetAllStudents() // Lấy tất cả các sinh viên
+        public IQueryable<Student> GetAllStudents() // Lấy tất cả các sinh viên
         {
+            //return _context.Students
+            //    .Include(s => s.Person)
+            //    .AsNoTracking()
+            //    .OrderBy(s => s.StudentId)
+            //    .ToList();
+
             return _context.Students
-                .Include(s => s.Person)
-                .AsNoTracking()
-                .OrderBy(s => s.StudentId)
-                .ToList();
+                .Include(s => s.Program)
+                .Include(s => s.Person);
         }
 
         public List<Course> GetAllCourses() // Lấy tất cả các học phần
