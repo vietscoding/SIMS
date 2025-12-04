@@ -623,6 +623,42 @@
                 });
             });
 
+            // Delete Handler
+            $('#deletePersonBtn').on('click', function () {
+                const personId = $('#updatePersonId').val();
+
+                if (!confirm('Are you sure you want to delete this person? This action cannot be undone.')) {
+                    return;
+                }
+                const payload = { personId: personId };
+                // disable delete button during operation
+                $('#deletePersonBtn').prop('disabled', true).text('Deleting...');
+                $.ajax({
+                    // url: '/People/DeletePerson',
+                    // method: 'POST',
+                    // contentType: 'application/json',
+                    // data: JSON.stringify(payload),
+                    url: '/People/DeletePerson?id=' + encodeURIComponent(personId),
+                    method: 'POST', // Vẫn là POST
+                    success: function (res) {
+                        if (res && res.success) {
+                            alert(res.message || 'Person deleted successfully.');
+                            $('#updatePersonModal').hide();
+                            resetAndLoad();
+                        } else {
+                            const msg = (res && res.message) ? res.message : 'Failed to delete person.';
+                            alert(msg);
+                        }
+                    },
+                    error: function () {
+                        alert('Failed to delete person due to server error. Please try again later.');
+                    },
+                    complete: function () {
+                        $('#deletePersonBtn').prop('disabled', false).text('Delete');
+                    }
+                });
+            });
+
             $(document).on("keydown", function (e) {
                 if (e.key === "Escape") {
                     $("#addPersonModal").hide(); // Đóng modal add course khi nhấn esc

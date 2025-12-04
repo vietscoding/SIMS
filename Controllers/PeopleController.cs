@@ -284,5 +284,28 @@ namespace SIMS.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult DeletePerson(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid person ID." });
+            }
+            var existingPerson= _db.GetPersonById(id);
+            if (existingPerson == null)
+            {
+                return NotFound(new { success = false, message = "Person not found." });
+            }
+            var deleted = _db.RemovePerson(id);
+            if (!deleted)
+            {
+                return StatusCode(500, new { message = "Failed to delete person. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Person deleted successfully." });
+            }
+        }
+
     }
 }
