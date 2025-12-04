@@ -254,7 +254,129 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
+            if (!$('head').find('#update-label-warning-style').length) {
+                $('<style id="update-label-warning-style"> .label-warning { color: #b58900 !important; font-weight: 600; } </style>').appendTo('head');
+            }
 
+            // Helper: set field-level invalid feedback
+            function setFieldError($el, message) {
+                // Thêm class bootstrap is-invalid
+                $el.addClass("is-invalid");
+                let $fb = $el.next(".invalid-feedback");
+                if (!$fb.length) {
+                    // Nếu chưa có, tạo div invalid-feedback
+                    $fb = $('<div class="invalid-feedback"></div>').insertAfter($el);
+                }
+                $fb.text(message);
+            }
+
+            // Helper: clear field-level invalid feedback
+            function clearFieldError($el) {
+                // Xóa class bootstrap is-invalid
+                $el.removeClass("is-invalid");
+                // Xóa thông báo lỗi (invalid-feedback)
+                const $fb = $el.next(".invalid-feedback");
+                if ($fb.length) $fb.remove();
+            }
+
+            // Helper: change label color to warning and optionally set field-level invalid feedback
+            function markUpdateFieldWarning(fieldId, message) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.addClass('label-warning');
+                if (message) {
+                    setFieldError($input, message);
+                }
+            }
+
+            function clearUpdateFieldWarning(fieldId) {
+                const $input = $('#' + fieldId);
+                const $label = $('label[for="' + fieldId + '"]');
+                $label.removeClass('label-warning');
+                clearFieldError($input);
+            }
+
+                    // Validation helpers (tương tự như trong PeopleList.cshtml/AddPerson)
+            function isValidCitizenId(id) {
+                return /^\d{12}$/.test((id || "").toString().trim());
+            }
+
+            function isValidPhone(phone) {
+                // Cho phép rỗng nếu không bắt buộc, nếu có thì phải hợp lệ
+                const trimmed = (phone || "").toString().trim();
+                if (!trimmed) return true;
+                return /^0\d{9}$/.test(trimmed);
+            }
+
+            function isValidEmail(email) {
+                // Cho phép rỗng, nếu có thì phải hợp lệ (Regex cơ bản)
+                const trimmed = (email || "").toString().trim();
+                if (!trimmed) return true;
+                return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(trimmed);
+            }
+
+            function isValidDob(d) {
+                if (!d) return false;
+                const dt = new Date(d);
+                if (isNaN(dt.getTime())) return false;
+                const today = new Date();
+                // Không cho phép ngày trong tương lai và ngày quá xa
+                return dt <= today && dt >= new Date(1900,0,1);
+            }
+
+            // Hàm kiểm tra tính hợp lệ của tất cả các trường trong modal Update Person
+            function validateUpdateModalFields() {
+                // Xóa tất cả các cảnh báo cũ
+                const fields = ['updatePersonName', 'updateCitizenIdNumber', 'updateGender', 'updateDob', 'updateEmail', 'updatePhone'];
+                fields.forEach(f => clearUpdateFieldWarning(f));
+
+                let valid = true;
+
+                const fullName = ($("#updatePersonName").val() || "").toString().trim();
+                const citizenId = ($("#updateCitizenIdNumber").val() || "").toString().trim();
+                const genderText = ($("#updateGender").val() || "").toString().trim();
+                const dobRaw = $("#updateDob").val();
+                const email = ($("#updateEmail").val() || "").toString().trim();
+                const phone = ($("#updatePhone").val() || "").toString().trim();
+
+                // Yêu cầu: Full Name
+                if (!fullName) {
+                    markUpdateFieldWarning('updatePersonName', 'Full name is required.');
+                    valid = false;
+                }
+
+                // Yêu cầu: Citizen ID (12 chữ số)
+                if (!isValidCitizenId(citizenId)) {
+                    markUpdateFieldWarning('updateCitizenIdNumber', 'Citizen ID must be exactly 12 digits.');
+                    valid = false;
+                }
+
+                // Yêu cầu: Gender
+                if (!genderText) {
+                    markUpdateFieldWarning('updateGender', 'Gender is required.');
+                    valid = false;
+                }
+
+                // Yêu cầu: Date of Birth hợp lệ
+                if (!isValidDob(dobRaw)) {
+                    markUpdateFieldWarning('updateDob', 'Please provide a valid Date of Birth (cannot be future date).');
+                    valid = false;
+                }
+
+                // Kiểm tra Email (nếu có thì phải hợp lệ)
+                if (email && !isValidEmail(email)) {
+                    markUpdateFieldWarning('updateEmail', 'Please enter a valid email address.');
+                    valid = false;
+                }
+
+                // Kiểm tra Phone (nếu có thì phải hợp lệ)
+                if (phone && !isValidPhone(phone)) {
+                    markUpdateFieldWarning('updatePhone', 'Phone number must start with 0 and contain 10 digits.');
+                    valid = false;
+                }
+
+                return valid;
+            }
 
             $(document).on("click", ".view-details", function (e) {
                 e.preventDefault();
@@ -269,18 +391,61 @@
                     method: "GET",
                     data: { id: personId },
                     success: function (p) {
+
+
                         if (p.gender == 1) {
-                            let displayGender = "Male";
+                            displayGender = "Male";
                         }
                         else if (p.gender == 0) {
                             displayGender = "Female";
                         }
-                        else (displayGender = "Unknown";)
+                        else {displayGender = "Unknown";}
+                            let dob = p.dateOfBirth;
+
+                        if (dob) {
+                            // 1. Tạo đối tượng Date từ dữ liệu nhận được (p.dateOfBirth)
+                            // Dữ liệu này thường là chuỗi ISO 8601 (ví dụ: "2000-11-20T00:00:00") hoặc timestamp.
+                            let dateObj = new Date(dob);
+
+                            // 2. Chuyển đổi thành định dạng "YYYY-MM-DD"
+                            // Quan trọng: Sử dụng phương thức cho múi giờ địa phương để tránh lỗi lệch ngày
+                            const year = dateObj.getFullYear();
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Tháng tính từ 0, nên cần +1
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+
+                            const formattedDate = `${year}-${month}-${day}`;
+
+                            // 3. Gán giá trị vào trường input type="date"
+                            $("#updateDob").val(formattedDate);
+
+                            // 4. Lưu giá trị gốc để kiểm tra thay đổi sau này
+                            $("#updateDob").data("original", formattedDate);
+                        } else {
+                            // Nếu không có dữ liệu ngày sinh, gán giá trị rỗng
+                            $("#updateDob").val("");
+                            $("#updateDob").data("original", "");
+                        }
+
+                        $('#updatePersonName').data('original', p.fullName || '');
+                        $('#updateCitizenIdNumber').data('original', p.citizenIdNumber || '');
+                        $('#updateGender').data('original', displayGender || ''); // displayGender là "Male" hoặc "Female"
+                        // Gán giá trị gốc cho DOB đã format (đã có ở trên, nhưng cần đảm bảo)
+                        // $('#updateDob').data('original', formattedDate);
+                        $('#updateEmail').data('original', p.email || '');
+                        $('#updatePhone').data('original', p.phoneNumber || '');
+                        $('#updateAddress').data('original', p.address || '');
+                        $('#updateNationality').data('original', p.nationality || '');
+
+                        // clear any previous warnings / errors when modal opens
+                        ['updatePersonName', 'updateCitizenIdNumber', 'updateGender', 'updateDob', 'updateEmail', 'updatePhone'].forEach(f => clearUpdateFieldWarning(f));
+                        // ensure update button is disabled initially
+                        $('#updatePersonBtn').prop('disabled', true);
+
                         $("#updatePersonId").val(p.personId);
                         $("#updatePersonName").val(p.fullName);
                         $("#updateCitizenIdNumber").val(p.citizenIdNumber);
-                        $("#updateGender").val(p.gender);
-                        $("#updateDob").val(p.dateOfBirth);
+                        $("#updateGender").val(displayGender);
+                        // $("#updateDob").val(p.dateOfBirth);
                         $("#updateEmail").val(p.email);
                         $("#updatePhone").val(p.phoneNumber);
                         $("#updateAddress").val(p.address);
@@ -288,6 +453,172 @@
                     },
                     error: function () {
                         console.log("fail to load person data!")
+                    }
+                });
+            });
+
+            $('#updatePersonModal input, #updatePersonModal select').off('input change').on('input change', function() {
+                const originalValues = {
+                    fullName: $('#updatePersonName').data('original') || '',
+                    citizenIdNumber: $('#updateCitizenIdNumber').data('original') || '',
+                    gender: $('#updateGender').data('original') || '',
+                    dob: $('#updateDob').data('original') || '',
+                    email: $('#updateEmail').data('original') || '',
+                    phone: $('#updatePhone').data('original') || '',
+                    address: $('#updateAddress').data('original') || '',
+                    nationality: $('#updateNationality').data('original') || ''
+                };
+                const currentValues = {
+                    fullName: $('#updatePersonName').val() || '',
+                    citizenIdNumber: $('#updateCitizenIdNumber').val() || '',
+                    gender: $('#updateGender').val() || '',
+                    dob: $('#updateDob').val() || '',
+                    email: $('#updateEmail').val() || '',
+                    phone: $('#updatePhone').val() || '',
+                    address: $('#updateAddress').val() || '',
+                    nationality: $('#updateNationality').val() || ''
+                };
+
+                let isChanged = false;
+                for (const key in originalValues) {
+                    // So sánh các giá trị
+                    if (originalValues[key] !== currentValues[key]) {
+                        isChanged = true;
+                        break;
+                    }
+                }
+
+                // Validate fields and update UI accordingly
+                const valid = validateUpdateModalFields();
+
+                // Enable Update only if there is a change AND the fields are valid
+                $('#updatePersonBtn').prop('disabled', !(isChanged && valid));
+            });
+
+
+            // 3. Trình xử lý sự kiện click cho nút Update Person (tương tự logic Course.cshtml)
+
+            $('#updatePersonBtn').off('click').on('click', function () {
+                const $updateBtn = $(this);
+
+                // 1. Clear previous warnings (giống Course.cshtml)
+                const trackedFields = ['updatePersonName', 'updateCitizenIdNumber', 'updateGender', 'updateDob', 'updateEmail', 'updatePhone'];
+                trackedFields.forEach(f => clearUpdateFieldWarning(f));
+
+                // 2. Validate client-side (ngăn chặn gửi request không cần thiết)
+                if (!validateUpdateModalFields()) {
+                    const $firstInvalid = $(".is-invalid").first();
+                    if ($firstInvalid.length) $firstInvalid.focus();
+                    return;
+                }
+
+                // 3. Chuẩn bị payload và gửi request
+                $updateBtn.prop('disabled', true).text('Updating...');
+
+                // Chuyển đổi giới tính thành boolean (true=Male, false=Female, null=Unknown)
+                let getGenderInBool;
+                const genderVal = $('#updateGender').val();
+                if (genderVal === "Male") {
+                    getGenderInBool = true;
+                }
+                else if (genderVal === "Female") {
+                    getGenderInBool = false;
+                }
+                else {
+                    getGenderInBool = null;
+                }
+
+                const payload = {
+                    personId: $('#updatePersonId').val(), // Bắt buộc phải có ID
+                    fullName: $('#updatePersonName').val()?.toString().trim() || '',
+                    citizenIdNumber: $('#updateCitizenIdNumber').val()?.toString().trim() || '',
+                    gender: getGenderInBool,
+                    dateOfBirth: $('#updateDob').val(), // Format YYYY-MM-DD
+                    email: $('#updateEmail').val()?.toString().trim() || '',
+                    phoneNumber: $('#updatePhone').val()?.toString().trim() || '',
+                    address: $('#updateAddress').val()?.toString().trim() || '',
+                    nationality: $('#updateNationality').val()?.toString().trim() || ''
+                };
+
+                // Send to the server for authoritative validation + update
+                $.ajax({
+                    url: '/People/UpdatePerson', // Giả định endpoint này
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        if (res && res.success) {
+                            alert(res.message || 'Person updated successfully.');
+                            $('#updatePersonModal').hide();
+                            resetAndLoad(); // Tải lại danh sách
+                        } else {
+                            // Xử lý lỗi validation từ server (giống Course.cshtml)
+                            const errors = (res && res.errors) ? res.errors : null;
+                            if (errors && typeof errors === 'object') {
+                                const map = {
+                                    fullName: 'updatePersonName',
+                                    citizenIdNumber: 'updateCitizenIdNumber',
+                                    gender: 'updateGender',
+                                    dateOfBirth: 'updateDob',
+                                    email: 'updateEmail',
+                                    phoneNumber: 'updatePhone',
+                                    address: 'updateAddress',
+                                    nationality: 'updateNationality'
+                                };
+                                let showedGeneral = false;
+                                Object.keys(errors).forEach(function (k) {
+                                    const message = errors[k] || 'Invalid value.';
+                                    const fld = map[k] || null;
+                                    if (fld) {
+                                        markUpdateFieldWarning(fld, message);
+                                    } else {
+                                        if (!showedGeneral) {
+                                            alert(message);
+                                            showedGeneral = true;
+                                        }
+                                    }
+                                });
+                            } else {
+                                const msg = (res && res.message) ? res.message : 'Failed to update person. Please check your input.';
+                                alert(msg);
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        // Xử lý lỗi server (giống Course.cshtml)
+                        let message = 'Failed to update person due to server error. Please try again later.';
+                        let parsed = null;
+                        try {
+                            parsed = JSON.parse(xhr.responseText || "{}");
+                        } catch (e) { /* ignore */ }
+
+                        if (parsed && parsed.errors) {
+                            // Xử lý lỗi validation từ server
+                            const map = {
+                                fullName: 'updatePersonName',
+                                citizenIdNumber: 'updateCitizenIdNumber',
+                                gender: 'updateGender',
+                                dateOfBirth: 'updateDob',
+                                email: 'updateEmail',
+                                phoneNumber: 'updatePhone',
+                                address: 'updateAddress',
+                                nationality: 'updateNationality'
+                            };
+                            Object.keys(parsed.errors).forEach(function (k) {
+                                const msg = parsed.errors[k] || 'Invalid value.';
+                                const fld = map[k] || null;
+                                if (fld) {
+                                    markUpdateFieldWarning(fld, msg);
+                                }
+                            });
+                        } else if (parsed && parsed.message) {
+                            alert(parsed.message);
+                        } else {
+                            alert(message);
+                        }
+                    },
+                    complete: function () {
+                        $updateBtn.prop('disabled', false).text('Update');
                     }
                 });
             });
@@ -315,7 +646,10 @@
             $("#closeFilterModal").on("click", function() {
                 $("#filterModal").hide();
             });
-            $("#closeUpdatePersonModal", "#cancelUpdatePersonBtn").on("click", function() {
+            $("#closeUpdatePersonModal").on("click", function() {
+                $("#updatePersonModal").hide();
+            });
+            $("#cancelUpdatePersonBtn").on("click", function() {
                 $("#updatePersonModal").hide();
             });
             // Close when clicking outside content

@@ -251,5 +251,38 @@ namespace SIMS.Controllers
             });
         }
 
+        [HttpPost]
+        public IActionResult UpdatePerson([FromBody] Person person)
+        {
+            if (person == null || person.PersonId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid person data." });
+            }
+            var existingPerson = _db.GetPersonById(person.PersonId);
+            if (existingPerson == null)
+            {
+                return NotFound(new { success = false, message = "Person not found." });
+            }
+
+            existingPerson.FullName = person.FullName?.Trim();
+            existingPerson.CitizenIdNumber = person.CitizenIdNumber?.Trim();
+            existingPerson.Gender = person.Gender;
+            existingPerson.DateOfBirth = person.DateOfBirth;
+            existingPerson.Email = person.Email;
+            existingPerson.PhoneNumber = person.PhoneNumber;
+            existingPerson.Address = person.Address;
+            existingPerson.Nationality = person.Nationality;
+
+            var updated = _db.UpdatePerson(existingPerson);
+            if (!updated)
+            {
+                return StatusCode(500, new { message = "Failed to update person. Please try again." });
+            }
+            else
+            {
+                return Json(new { success = true, message = "Person updated successfully." });
+            }
+        }
+
     }
 }

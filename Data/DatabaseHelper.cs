@@ -339,8 +339,14 @@ namespace SIMS.Data
                 return false;
             }
             existingPerson.FullName = person.FullName;
+            existingPerson.CitizenIdNumber = person.CitizenIdNumber;
+            existingPerson.Gender = person.Gender;
             existingPerson.DateOfBirth = person.DateOfBirth;
-            
+            existingPerson.Email = person.Email;
+            existingPerson.PhoneNumber = person.PhoneNumber;
+            existingPerson.Address = person.Address;
+            existingPerson.Nationality = person.Nationality;
+
             _context.SaveChanges();
             return true;
         }
