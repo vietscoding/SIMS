@@ -23,7 +23,7 @@ namespace SIMS.Controllers
                 Majors = _db.GetAllMajors(),
                 Faculties = _db.GetAllFaculties(),
             };
-            return View("Views/Admin/AcademicProgram.cshtml", academicProgramList);
+            return View(academicProgramList);
         }
 
         [HttpPost]

@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// DatabaseHelper.cs
+
+using Microsoft.EntityFrameworkCore;
 using SIMS.Models;
+//using System.Data.Entity;
 using System.Diagnostics.Contracts;
 
 
@@ -34,21 +37,19 @@ namespace SIMS.Data
                 .AsQueryable();
         }
 
-        public List<Person> GetAllPeople() // Lấy tất cả các người
-        {
-            return _context.People
-                .AsNoTracking()
-                .OrderBy(p => p.PersonId)
-                .ToList();
-        }
+
         
-        public List<Student> GetAllStudents() // Lấy tất cả các sinh viên
+        public IQueryable<Student> GetAllStudents() // Lấy tất cả các sinh viên
         {
+            //return _context.Students
+            //    .Include(s => s.Person)
+            //    .AsNoTracking()
+            //    .OrderBy(s => s.StudentId)
+            //    .ToList();
+
             return _context.Students
-                .Include(s => s.Person)
-                .AsNoTracking()
-                .OrderBy(s => s.StudentId)
-                .ToList();
+                .Include(s => s.Program)
+                .Include(s => s.Person);
         }
 
         public List<Course> GetAllCourses() // Lấy tất cả các học phần
@@ -105,7 +106,59 @@ namespace SIMS.Data
             return result;
         }
 
+        //public List<Person> GetAllPeople() // Lấy tất cả các người
+        //{
+        //    return _context.People
+        //        .AsNoTracking()
+        //        .OrderBy(p => p.PersonId)
+        //        .ToList();
+        //}
 
+        public IQueryable<Person> GetPeople()
+        {
+            return _context.People;
+        }
+
+        public List<Person> GetAllPeople()
+        {
+            var rows = _context.People
+                .AsNoTracking()
+                .Select(p => new
+                {
+                    p.PersonId,
+                    CitizenIdNumber = p.CitizenIdNumber ?? string.Empty,
+                    FullName = p.FullName ?? string.Empty,
+                    Gender = p.Gender ?? null,
+                    DateOfBirth = p.DateOfBirth ?? null,
+                    Email = p.Email ?? null,
+                    PhoneNumber = p.PhoneNumber ?? null,
+                    Address = p.Address ?? null,
+                    Nationality = p.Nationality ?? null,
+                    p.CreatedAt,
+                    p.UpdatedAt,
+                    p.IsDeleted
+                })
+                .OrderBy(x => x.FullName)
+                .ToList();
+
+            var result = rows.Select(r => new Person
+            {
+                PersonId = r.PersonId,
+                CitizenIdNumber = r.CitizenIdNumber,
+                FullName = r.FullName,
+                Gender = r.Gender,
+                DateOfBirth = r.DateOfBirth,
+                Email = r.Email,
+                PhoneNumber = r.PhoneNumber,
+                Address = r.Address,
+                Nationality = r.Nationality,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                IsDeleted = r.IsDeleted
+            }).ToList();
+
+            return result;
+        }
 
         public List<AcademicProgram> GetProgramsByMajorId(int majorId) // Lấy các chương trình học theo ID ngành
         {
@@ -148,6 +201,7 @@ namespace SIMS.Data
                 .AsNoTracking()
                 .FirstOrDefault(p => p.PersonId == personId) ?? new Person();
         }
+
 
         public Faculty GetFacultyById(int facultyId) // Lấy khoa theo ID
         {
@@ -290,8 +344,14 @@ namespace SIMS.Data
                 return false;
             }
             existingPerson.FullName = person.FullName;
+            existingPerson.CitizenIdNumber = person.CitizenIdNumber;
+            existingPerson.Gender = person.Gender;
             existingPerson.DateOfBirth = person.DateOfBirth;
-            
+            existingPerson.Email = person.Email;
+            existingPerson.PhoneNumber = person.PhoneNumber;
+            existingPerson.Address = person.Address;
+            existingPerson.Nationality = person.Nationality;
+
             _context.SaveChanges();
             return true;
         }
@@ -389,7 +449,7 @@ namespace SIMS.Data
 
             existingStudent.Person.PhoneNumber = student.PhoneNumber;
             existingStudent.Person.Address = student.Address;
-            existingStudent.Person.Updated = DateTime.Now;
+            existingStudent.Person.UpdatedAt = DateTime.Now;
 
             _context.Entry(existingStudent.Person).State = EntityState.Modified;
             _context.SaveChanges();

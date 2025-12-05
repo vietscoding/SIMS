@@ -25,22 +25,25 @@ namespace SIMS.Models
         public DateTime? DateOfBirth { get; set; }
 
         [Column("email")]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; } = string.Empty;
 
         [Column("phone_number")]
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; } = string.Empty;
 
         [Column("address")]
-        public string Address { get; set; } = string.Empty;
+        public string? Address { get; set; } = string.Empty;
 
         [Column("nationality")]
-        public string Nationality { get; set; } = string.Empty;
+        public string? Nationality { get; set; } = string.Empty;
 
         [Column("created_at")]
-        public DateTime Created { get; set; }
+        public DateTime? CreatedAt { get; set; }
 
         [Column("updated_at")]
-        public DateTime Updated { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+
+        [Column("is_deleted")]
+        public bool? IsDeleted { get; set; }
 
         [JsonIgnore]
         public virtual Student? Student { get; set; }
